@@ -5,29 +5,8 @@
 #ifndef NES_CPU_H
 #define NES_CPU_H
 
-
 #include <stdint-gcc.h>
-
-typedef enum {
-    IMP = 1,
-    ACC = 2,
-    IMM = 3,
-    ZER = 4,
-    ZEX = 5,
-    ZEY = 6,
-    REL = 7,
-    ABS = 8,
-    ABX = 9,
-    ABY = 10,
-    IND = 11,
-    INX = 12,
-    INY = 13,
-} addr_mode;
-
-typedef struct {
-    addr_mode mode;
-    uint8_t opcode;
-} instrucion;
+#include "defines.h"
 
 class CPU {
 public:
@@ -40,6 +19,8 @@ private:
     uint8_t   Y; // Y register
     uint8_t  SR; // status register
     uint8_t  SP; // stack pointer
+
+    instruction instructions[0xFF]{};
 };
 
 

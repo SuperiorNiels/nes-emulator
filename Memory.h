@@ -24,6 +24,7 @@ public:
 
 private:
     uint8_t mem[MAX_MEM]; // 16K
+
 };
 
 

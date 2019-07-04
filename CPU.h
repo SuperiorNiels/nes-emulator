@@ -8,6 +8,27 @@
 
 #include <stdint-gcc.h>
 
+typedef enum {
+    IMP = 1,
+    ACC = 2,
+    IMM = 3,
+    ZER = 4,
+    ZEX = 5,
+    ZEY = 6,
+    REL = 7,
+    ABS = 8,
+    ABX = 9,
+    ABY = 10,
+    IND = 11,
+    INX = 12,
+    INY = 13,
+} addr_mode;
+
+typedef struct {
+    addr_mode mode;
+    uint8_t opcode;
+} instrucion;
+
 class CPU {
 public:
     CPU();

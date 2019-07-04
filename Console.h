@@ -12,7 +12,7 @@
 class Console {
 
 public:
-    Console();
+    Console() = default;
 
     void loadROM(const char* filename);
 

@@ -8,24 +8,6 @@
 
 #include <stdint-gcc.h>
 
-typedef enum {
-    ADDR_IMMEDIATE,
-    ADDR_ABS,
-    ADDR_ZP,
-    ADDR_IMPL,
-    ADDR_INDR_ABS,
-    ADDR_ABS_INDX_X,
-    ADDR_ABS_INDX_Y,
-    ADDR_ZP_INDX_X,
-    ADDR_ZP_INDX_Y,
-    ADDR_INDX_INDR,
-    ADDR_INDR_INDX,
-    ADDR_REL,
-    ADDR_AC
-} addr_mode;
-
-
-
 class CPU {
 public:
     CPU();

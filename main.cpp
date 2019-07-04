@@ -3,5 +3,7 @@
 
 int main() {
     Console c;
+    c.loadROM("../test_program.bin");
+    c.run();
     return 0;
 }

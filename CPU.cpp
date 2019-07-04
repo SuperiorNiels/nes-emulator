@@ -4,20 +4,28 @@
 
 #include <iostream>
 #include "CPU.h"
+#include "Memory.h"
 
 CPU::CPU() {
-    PC = 0x0000;
-    AC = 0x00;
-    X = 0x00;
-    Y = 0x00;
-    SR = 0x00;
-    SP = 0x00;
+    state.PC = 0x0000;
+    state.AC = 0x00;
+    state.X = 0x00;
+    state.Y = 0x00;
+    state.SR = 0x00;
+    state.SP = 0x00;
 
-    // Intialize instructions
-    for(auto & i : instructions) {
-        i = instruction();
-    }
-
-    initialize_instructions(instructions);
+    initialize_instructions(&instructions);
     std::cout << "temp";
 }
+
+void CPU::attachMemeory(Memory* memory) {
+    CPU::mem = memory;
+}
+
+void CPU::setProgramCounter(uint16_t pc) {
+    state.PC = pc;
+}
+
+void CPU::execute() {}
+
+void CPU::executeInstruction(instruction instr) {}

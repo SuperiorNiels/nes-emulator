@@ -10,6 +10,8 @@
 #include <iostream>
 #include <cstdint>
 
+#include "CPU.h"
+
 # define MAX_MEM 0xFFFF
 
 class Memory {
@@ -17,13 +19,14 @@ public:
     Memory();
 
     void loadBinary(const char* filename);
-    uint8_t get(uint16_t addr);
+    uint8_t get(uint16_t addr, addr_mode mode, cpu_state state);
     void write(uint16_t addr, uint8_t data);
+    void dump();
 
     void reset();
 
 private:
-    uint8_t mem[MAX_MEM]; // 16K
+    uint8_t mem[MAX_MEM]{}; // 16K
 
 };
 

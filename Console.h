@@ -12,9 +12,10 @@
 class Console {
 
 public:
-    Console() = default;
+    Console();
 
     void loadROM(const char* filename);
+    void run();
 
 private:
     Memory mem;

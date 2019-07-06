@@ -10,11 +10,19 @@ Memory::Memory() {
 
 void Memory::loadBinary(const char *filename) {
     std::cout << "Loading binary program: " << filename << std::endl;
-    std::ifstream file(filename, std::ios::binary);
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
 
+    std::cout << "File size: " << size << std::endl;
+
+    if(size > MAX_MEM + 1) {
+        std::cout << "File is to big (max. 64K)." << std::endl;
+        return;
+    }
+
     char buffer[MAX_MEM];
-    if(!file.read(buffer, MAX_MEM)) {
+    if(!file.read(buffer, size)) {
         std::cout << "Something went wrong while reading file" << std::endl;
         file.close();
         return;

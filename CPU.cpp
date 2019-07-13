@@ -25,73 +25,122 @@ void CPU::setProgramCounter(uint16_t pc) {
     state.PC = pc;
 }
 
+bool CPU::checkFlag(status_flags flag) {
+    return state.SR & (1u << flag);
+}
+
+void CPU::setFlag(status_flags flag) {
+    uint8_t temp = (1u << flag);
+    state.SR |= temp;
+}
+
+void CPU::removeFlag(status_flags flag) {
+    state.SR &= ~(1u << flag);
+}
+
+void CPU::toggleFlag(status_flags flag) {
+    state.SR ^= (1u << flag);
+}
+
 void CPU::execute() {
-    for(uint16_t i = 0; i < 0xFFFF; i++) {
-        executeInstruction(instructions[mem->get(i, ADDR_ABS, state)]);
+    running = true;
+    state.PC = 0x0000;
+    while(running) {
+        uint8_t temp = mem->get(ADDR_IMM, state);
+        printf("Opcode: %.2X\n", temp);
+        executeInstruction(instructions[temp]);
+        printStatus();
     }
 }
 
-void CPU::executeInstruction(instruction instr) {
+void CPU::executeInstruction(const instruction& instr) {
+    uint8_t temp;
+    uint16_t result;
+
+    state.PC++;
+
     switch(instr.type) {
         case ADC:
-            std::cout << "ADC" << std::endl;
+            temp = mem->get(instr.mode, state);
+            result = state.AC + temp + (uint8_t) checkFlag(CARRY);
+            if(result > 0xFF00) {
+                setFlag(CARRY);
+                result = 0xFF;
+            }
+            state.AC = result;
             break;
-        case AND:break;
-        case ASL:break;
-        case BCC:break;
-        case BCS:break;
-        case BEQ:break;
-        case BIT:break;
-        case BMI:break;
-        case BNE:break;
-        case BPL:break;
-        case BRK:break;
-        case BVC:break;
-        case BVS:break;
-        case CLC:break;
-        case CLD:break;
-        case CLI:break;
-        case CLV:break;
-        case CMP:break;
-        case CPX:break;
-        case CPY:break;
-        case DEC:break;
-        case DEX:break;
-        case DEY:break;
-        case EOR:break;
-        case INC:break;
-        case INX:break;
-        case INY:break;
-        case JMP:break;
-        case JSR:break;
-        case LDA:break;
-        case LDX:break;
-        case LDY:break;
-        case LSR:break;
-        case NOP:break;
-        case ORA:break;
-        case PHA:break;
-        case PHP:break;
-        case PLA:break;
-        case PLP:break;
-        case ROL:break;
-        case ROR:break;
-        case RTI:break;
-        case RTS:break;
-        case SBC:break;
-        case SEC:break;
-        case SED:break;
-        case SEI:break;
-        case STA:break;
-        case STX:break;
-        case STY:break;
-        case TAX:break;
-        case TAY:break;
-        case TSX:break;
-        case TXA:break;
-        case TXS:break;
-        case TYA:break;
+        case AND:
+        case ASL:
+        case BCC:
+        case BCS:
+        case BEQ:
+        case BIT:
+        case BMI:
+        case BNE:
+        case BPL:
+        case BRK:
+            std::cout << "Program done!" << std::endl;
+            running = false;
+            break;
+        case BVC:
+        case BVS:
+        case CLC:
+        case CLD:
+        case CLI:
+        case CLV:
+        case CMP:
+        case CPX:
+        case CPY:
+        case DEC:
+        case DEX:
+        case DEY:
+        case EOR:
+        case INC:
+        case INX:
+        case INY:
+        case JMP:
+        case JSR:
+        case LDA:
+            state.AC = mem->get(instr.mode, state);
+            if(state.AC == 0) setFlag(ZERO);
+            if(state.AC & (1u << 7)) setFlag(NEGATIVE);
+            break;
+        case LDX:
+        case LDY:
+        case LSR:
+        case NOP:
+        case ORA:
+        case PHA:
+        case PHP:
+        case PLA:
+        case PLP:
+        case ROL:
+        case ROR:
+        case RTI:
+        case RTS:
+        case SBC:
+        case SEC:
+        case SED:
+        case SEI:
+        case STA:
+        case STX:
+        case STY:
+        case TAX:
+        case TAY:
+        case TSX:
+        case TXA:
+        case TXS:
+        case TYA:
+            std::cout << instr.name << std::endl;
+            break;
         default:
-            std::cout << "Unknown instruction type." << std::endl;
+            return;
     }
+
+    state.PC += instr.bytes - 1;
+}
+
+void CPU::printStatus() {
+    printf("PC: %.2X\n", state.PC);
+    printf("AC: %.2X\n", state.AC);
 }

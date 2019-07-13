@@ -3,7 +3,7 @@
 
 int main() {
     Console c;
-    c.loadROM("../cpu_dummy_reads.nes");
+    c.loadROM("../test.bin");
     c.run();
     return 0;
 }

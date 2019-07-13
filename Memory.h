@@ -19,7 +19,8 @@ public:
     Memory();
 
     void loadBinary(const char* filename);
-    uint8_t get(uint16_t addr, addr_mode mode, cpu_state state);
+    uint8_t get(addr_mode mode, cpu_state state);
+    void set(uint16_t addr, uint8_t value);
     void write(uint16_t addr, uint8_t data);
     void dump();
 

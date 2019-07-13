@@ -26,12 +26,20 @@ public:
     void attachMemeory(Memory* memory);
     void setProgramCounter(uint16_t pc);
     void execute();
+    void setFlag(status_flags flag);
+    void removeFlag(status_flags flag);
+    void toggleFlag(status_flags flag);
+    bool checkFlag(status_flags flag);
 private:
     cpu_state state{};
     std::map<uint8_t, instruction> instructions;
     Memory* mem = nullptr;
 
-    void executeInstruction(instruction instr);
+    void executeInstruction(const instruction& instr);
+    void printStatus();
+
+    // temp field for debugging
+    bool running;
 };
 
 

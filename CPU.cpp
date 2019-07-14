@@ -11,8 +11,9 @@ CPU::CPU() {
     state.AC = 0x00;
     state.X = 0x00;
     state.Y = 0x00;
-    state.SR = 0x00;
     state.SP = 0x00;
+
+    memset(&flags, 0, 8);
 
     initialize_instructions(&instructions);
 }
@@ -25,48 +26,36 @@ void CPU::setProgramCounter(uint16_t pc) {
     state.PC = pc;
 }
 
-bool CPU::checkFlag(status_flags flag) {
-    return state.SR & (1u << flag);
-}
-
-void CPU::setFlag(status_flags flag) {
-    uint8_t temp = (1u << flag);
-    state.SR |= temp;
-}
-
-void CPU::removeFlag(status_flags flag) {
-    state.SR &= ~(1u << flag);
-}
-
-void CPU::toggleFlag(status_flags flag) {
-    state.SR ^= (1u << flag);
-}
-
 void CPU::execute() {
-    running = true;
     state.PC = 0x0000;
     while(running) {
         uint8_t temp = mem->get(ADDR_IMM, state);
-        printf("Opcode: %.2X\n", temp);
         executeInstruction(instructions[temp]);
         printStatus();
     }
 }
 
+void CPU::update_CV_flags(uint8_t param, int16_t result) {
+    flags[C] = result > 0xFF;
+    flags[V] = ~(state.AC ^ param) & (state.AC ^ result) & 0x80;
+}
+
+void CPU::update_ZN_flags() {
+    flags[Z] = state.AC == 0;
+    flags[N] = state.AC & 0x80;
+}
+
 void CPU::executeInstruction(const instruction& instr) {
-    uint8_t temp;
+    uint8_t param;
     uint16_t result;
 
     state.PC++;
-
+    param = mem->get(instr.mode, state);
     switch(instr.type) {
         case ADC:
-            temp = mem->get(instr.mode, state);
-            result = state.AC + temp + (uint8_t) checkFlag(CARRY);
-            if(result > 0xFF00) {
-                setFlag(CARRY);
-                result = 0xFF;
-            }
+            result = state.AC + param + (uint8_t) flags[C];
+            update_CV_flags(param, result);
+            update_ZN_flags();
             state.AC = result;
             break;
         case AND:
@@ -102,11 +91,16 @@ void CPU::executeInstruction(const instruction& instr) {
         case JSR:
         case LDA:
             state.AC = mem->get(instr.mode, state);
-            if(state.AC == 0) setFlag(ZERO);
-            if(state.AC & (1u << 7)) setFlag(NEGATIVE);
+            update_ZN_flags();
             break;
         case LDX:
+            state.X = mem->get(instr.mode, state);
+            update_ZN_flags();
+            break;
         case LDY:
+            state.Y = mem->get(instr.mode, state);
+            update_ZN_flags();
+            break;
         case LSR:
         case NOP:
         case ORA:
@@ -123,6 +117,7 @@ void CPU::executeInstruction(const instruction& instr) {
         case SED:
         case SEI:
         case STA:
+            // TODO: split memory get function: get address (mode) and get content (byte, param)
         case STX:
         case STY:
         case TAX:
@@ -141,6 +136,9 @@ void CPU::executeInstruction(const instruction& instr) {
 }
 
 void CPU::printStatus() {
+    printf("------ CPU State dump ------\n");
     printf("PC: %.2X\n", state.PC);
     printf("AC: %.2X\n", state.AC);
+    printf("X: %.2X\n", state.X);
+    printf("Y: %.2X\n", state.Y);
 }

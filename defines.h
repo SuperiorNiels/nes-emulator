@@ -91,16 +91,6 @@ typedef struct {
     std::string name{};
 } instruction;
 
-typedef enum {
-    CARRY           = 0,
-    ZERO            = 1,
-    INTERRUPT       = 2,
-    DECIMAL_MODE    = 3,
-    BREAK_COMMAND   = 4,
-    OVERFLOW        = 5,
-    NEGATIVE        = 6,
-} status_flags;
-
 inline void initialize_instructions(std::map<uint8_t, instruction>*instructions) {
     instruction instr;
     instr.type = ADC;

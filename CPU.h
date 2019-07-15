@@ -8,6 +8,8 @@
 #include <stdint-gcc.h>
 #include "defines.h"
 
+#define STACK_LOCATION 0x100
+
 class Memory;
 
 typedef enum {
@@ -35,8 +37,6 @@ public:
     void attachMemeory(Memory* memory);
     void setProgramCounter(uint16_t pc);
     void execute();
-    void update_CV_flags(uint8_t param, int16_t result);
-    void update_ZN_flags();
 private:
     cpu_state state{};
     bool flags[8];
@@ -44,10 +44,15 @@ private:
     Memory* mem = nullptr;
 
     void executeInstruction(const instruction& instr);
-    void printStatus();
+    void update_CV_flags(uint8_t param, int16_t result);
+    void update_ZN_flags(uint8_t param);
+    void push_stack(uint8_t value);
+    uint8_t pop_stack();
 
-    // temp field for debugging
-    bool running = true;
+    // Helper functions
+    uint8_t convertFlagsToByte();
+    void loadFlagsFromByte(uint8_t byte);
+    void printStatus();
 };
 
 

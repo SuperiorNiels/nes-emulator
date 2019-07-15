@@ -10,7 +10,7 @@ Console::Console() {
 
 void Console::loadROM(const char *filename) {
     mem.loadBinary(filename);
-    mem.dump();
+    //mem.dump();
 }
 
 void Console::run() {

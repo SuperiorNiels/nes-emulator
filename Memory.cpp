@@ -33,72 +33,53 @@ void Memory::loadBinary(const char *filename) {
     file.close();
 }
 
-uint8_t Memory::get(addr_mode mode, cpu_state state) {
-    uint16_t temp = 0x0000;
+uint16_t Memory::calc_addr(addr_mode mode, cpu_state state) {
+    uint16_t temp;
 
     switch(mode) {
+        case ADDR_IMP:
+        case ADDR_ACC:
+            break;
         case ADDR_IMM:
-            return mem[state.PC]; // value given directly used
+            return state.PC + 1;
         case ADDR_ZER:
-            // Page 0: 0x0000 - 0x00FF, only 0xFF needed (save 2 bytes)
-            temp = mem[state.PC];
-            if(temp < 0x0100)
-                return mem[temp];
-            else {
-                std::cout << "Zero page address to large!" << std::endl;
-                return 0x00;
-            }
+            return mem[state.PC + 1];
         case ADDR_ZEX:
-            temp = mem[state.PC];
-            if(temp < 0x0100)
-                return mem[(uint8_t) temp + state.X];
-            else {
-                std::cout << "Zero page address to large!" << std::endl;
-                return 0x00;
-            }
+            return mem[state.PC++] + state.X;
         case ADDR_ZEY:
-            temp = mem[state.PC];
-            if(temp < 0x0100)
-                return mem[(uint8_t) temp + state.Y];
-            else {
-                std::cout << "Zero page address to large!" << std::endl;
-                return 0x00;
-            }
-        case ADDR_ABS:
-            temp = mem[state.PC] | (mem[state.PC + 1] << 8);
-            return mem[temp];
-        case ADDR_ABX:
-            temp = mem[state.PC] | (mem[state.PC + 1] << 8);
-            return mem[temp + state.X];
-        case ADDR_ABY:
-            temp = mem[state.PC] | (mem[state.PC + 1] << 8);
-            return mem[temp + state.Y];
+            return mem[state.PC++] + state.Y;
         case ADDR_REL:
-            // addr is used as offset value
-            temp = mem[state.PC];
-            if(temp < 0x0100) {
-                auto signed_offset = (int8_t) temp;
-                return mem[state.PC + signed_offset];
-            } else return 0x00;
+            //temp = (int8_t) mem[state.PC + 1];
+            //return mem[state.PC + temp];
+            return state.PC + 1;
+        case ADDR_ABS:
+            return read16(state.PC + 1);
+        case ADDR_ABX:
+            return read16(state.PC + 1) + state.X;
+        case ADDR_ABY:
+            return read16(state.PC + 1) + state.Y;
         case ADDR_IND:
-            temp = mem[state.PC] | (mem[state.PC + 1] << 8);
-            temp = mem[temp] | (mem[temp + 1] << 8);
-            return temp;
+            temp = read16(state.PC + 1);
+            return mem[temp] | (mem[temp + 1] << 8);
         case ADDR_INX:
-            temp = mem[state.PC] + state.X;
+            temp = (read16(state.PC + 1) + state.X) % 0xFF;
             return mem[temp] | (mem[temp + 1] << 8);
         case ADDR_INY:
-            temp = mem[state.PC] + state.Y;
-            return mem[temp] | (mem[temp + 1] << 8);
-        case ADDR_ACC:
-        case ADDR_IMP:
+            temp = read16(state.PC + 1);
+            return mem[temp] | (mem[temp + 1] << 8) + state.Y;
         default:
-            return 0x00;
+            std::cout << "ERROR: wrong addressing mode" << std::endl;
+            break;
     }
+    return 0x0000;
 }
 
-void Memory::set(uint16_t addr, uint8_t value) {
-    mem[addr] = value;
+uint8_t Memory::read(uint16_t addr) {
+    return mem[addr];
+}
+
+uint16_t Memory::read16(uint16_t addr) {
+    return (mem[addr] | (mem[addr + 1] << 8));
 }
 
 void Memory::write(uint16_t addr, uint8_t data) {

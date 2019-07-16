@@ -93,6 +93,10 @@ void CPU::executeInstruction(const instruction& instr) {
             if(flags[Z]) { state.PC += param; return; }
             break;
         case BIT:
+            result = state.AC & param;
+            if(result == 0) flags[Z] = true;
+            flags[V] = (result & (1u << 6)) != 0;
+            flags[N] = (result & (1u << 7)) != 0;
         case BMI:
             if(flags[N]) { state.PC += param; return; }
             break;
@@ -218,6 +222,7 @@ void CPU::executeInstruction(const instruction& instr) {
         case RTI:
         case RTS:
         case SBC:
+
         case SEC:
             flags[C] = true;
             break;

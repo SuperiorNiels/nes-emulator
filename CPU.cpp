@@ -45,11 +45,11 @@ void CPU::update_ZN_flags(uint8_t param) {
 }
 
 void CPU::push_stack(uint8_t value) {                   // TODO:: PC counter is 16b
-    mem->write(STACK_LOCATION + state.SP--, value);
+    mem->write(STACK_LOCATION + state.SP++, value);
 }
 
 uint8_t CPU::pop_stack() {
-    return mem->read(STACK_LOCATION + state.SP++);
+    return mem->read(STACK_LOCATION + state.SP--);
 }
 
 void CPU::executeInstruction(const instruction& instr) {
@@ -84,13 +84,13 @@ void CPU::executeInstruction(const instruction& instr) {
             update_ZN_flags(param);
             break;
         case BCC:
-            if(!flags[C]) { state.PC += param; return; }
+            if(!flags[C]) { state.PC += (int8_t) param; return; }
             break;
         case BCS:
-            if(flags[C]) { state.PC += param; return; }
+            if(flags[C]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BEQ:
-            if(flags[Z]) { state.PC += param; return; }
+            if(flags[Z]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BIT:
             result = state.AC & param;
@@ -98,25 +98,26 @@ void CPU::executeInstruction(const instruction& instr) {
             flags[V] = (result & (1u << 6)) != 0;
             flags[N] = (result & (1u << 7)) != 0;
         case BMI:
-            if(flags[N]) { state.PC += param; return; }
+            if(flags[N]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BNE:
-            if(!flags[Z]) { state.PC += param; return; }
+            if(!flags[Z]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BPL:
-            if(!flags[N]) { state.PC += param; return; }
+            if(!flags[N]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BRK:
+            push_stack(state.PC >> 8);
             push_stack(state.PC);
             push_stack(convertFlagsToByte());
             state.PC = mem->read16(0xFFFE);
             flags[B] = true;
             break;
         case BVC:
-            if(!flags[V]) { state.PC += param; return; }
+            if(!flags[V]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BVS:
-            if(flags[V]) { state.PC += param; return; }
+            if(flags[V]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case CLC:
             flags[C] = false;
@@ -174,6 +175,10 @@ void CPU::executeInstruction(const instruction& instr) {
             state.PC = mem_loc; // TODO: implement 6502 bug on page boundry?
             return;
         case JSR:
+            push_stack(state.PC >> 8);
+            push_stack(state.PC);
+            state.PC = mem_loc;
+            break;
         case LDA:
             state.AC = param;
             update_ZN_flags(state.AC);
@@ -221,6 +226,8 @@ void CPU::executeInstruction(const instruction& instr) {
         case ROR:
         case RTI:
         case RTS:
+            state.PC = (pop_stack() | (pop_stack() << 8)) + 1;
+            return;
         case SBC:
 
         case SEC:

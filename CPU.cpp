@@ -29,7 +29,8 @@ void CPU::setProgramCounter(uint16_t pc) {
 void CPU::execute() {
     state.PC = 0x0000;
     while(!flags[B]) {
-        executeInstruction(instructions[mem->read(state.PC)]);
+        uint8_t opcode = mem->read(state.PC);
+        executeInstruction(instructions[opcode]);
         printStatus();
     }
 }
@@ -178,7 +179,7 @@ void CPU::executeInstruction(const instruction& instr) {
             push_stack(state.PC >> 8);
             push_stack(state.PC);
             state.PC = mem_loc;
-            break;
+            return;
         case LDA:
             state.AC = param;
             update_ZN_flags(state.AC);
@@ -194,12 +195,12 @@ void CPU::executeInstruction(const instruction& instr) {
             break;
         case LSR:
             if(instr.mode == ADDR_ACC) {
-                flags[C] = state.AC & 0x01;
+                flags[C] = (state.AC & 0x01) != 0;
                 state.AC = state.AC >> 1u;
                 update_ZN_flags(state.AC);
                 break;
             }
-            flags[C] = param & 0x01;
+            flags[C] = (param & 0x01) != 0;
             mem->write(mem_loc, param >> 1u);
             update_ZN_flags(param);
             break;
@@ -226,7 +227,7 @@ void CPU::executeInstruction(const instruction& instr) {
         case ROR:
         case RTI:
         case RTS:
-            state.PC = (pop_stack() | (pop_stack() << 8)) + 1;
+            state.PC = (pop_stack() | (pop_stack() << 8)) + 3;
             return;
         case SBC:
 

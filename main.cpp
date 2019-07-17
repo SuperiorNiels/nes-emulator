@@ -3,7 +3,7 @@
 
 int main() {
     Console c;
-    c.loadROM("../test.bin");
+    c.loadROM("../program.hex");
     c.run();
     return 0;
 }

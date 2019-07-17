@@ -50,7 +50,8 @@ void CPU::push_stack(uint8_t value) {                   // TODO:: PC counter is 
 }
 
 uint8_t CPU::pop_stack() {
-    return mem->read(STACK_LOCATION + state.SP--);
+    state.SP--;
+    return mem->read(STACK_LOCATION + state.SP);
 }
 
 void CPU::executeInstruction(const instruction& instr) {

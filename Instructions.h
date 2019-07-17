@@ -2,8 +2,8 @@
 // Created by niels on 04.07.19.
 //
 
-#ifndef NES_DEFINES_H
-#define NES_DEFINES_H
+#ifndef NES_INSTRUCTIONS_H
+#define NES_INSTRUCTIONS_H
 
 #include <cstdint>
 #include <map>
@@ -1002,4 +1002,4 @@ inline void initialize_instructions(std::map<uint8_t, instruction>*instructions)
 }
 
 
-#endif //NES_DEFINES_H
+#endif //NES_INSTRUCTIONS_H

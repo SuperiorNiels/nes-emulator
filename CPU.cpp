@@ -55,7 +55,7 @@ uint8_t CPU::pop_stack() {
 
 void CPU::executeInstruction(const instruction& instr) {
     uint8_t param;
-    uint16_t result, mem_loc;
+    uint16_t result, mem_loc, temp;
 
     mem_loc = mem->calc_addr(instr.mode, state);
     param = mem->read(mem_loc);
@@ -227,7 +227,7 @@ void CPU::executeInstruction(const instruction& instr) {
         case ROR:
         case RTI:
         case RTS:
-            state.PC = (pop_stack() | (pop_stack() << 8)) + 3;
+            state.PC = ((pop_stack() << 8) | pop_stack()) + 3;
             return;
         case SBC:
 

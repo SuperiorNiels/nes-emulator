@@ -3,4 +3,4 @@ project(nes)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(nes main.cpp CPU.cpp CPU.h Memory.cpp Memory.h Console.cpp Console.h defines.h)
+add_executable(nes main.cpp CPU.cpp CPU.h Memory.cpp Memory.h Console.cpp Console.h Instructions.h)

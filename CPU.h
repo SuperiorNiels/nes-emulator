@@ -6,9 +6,9 @@
 #define NES_CPU_H
 
 #include <stdint-gcc.h>
-#include "defines.h"
+#include "Instructions.h"
 
-#define STACK_LOCATION 0x100
+#define STACK_LOCATION 0x64
 
 class Memory;
 

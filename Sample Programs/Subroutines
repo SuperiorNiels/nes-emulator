@@ -1,0 +1,25 @@
+JSR init
+JSR increment
+JSR decrement
+JSR end
+
+init
+  LDX #05
+  STX $1000
+  LDX #00
+  RTS
+
+increment
+  INX
+  CPX $1000
+  BNE increment
+  RTS
+
+decrement
+  DEX
+  CPX #00
+  BNE decrement
+  BRK
+
+end
+  BRK

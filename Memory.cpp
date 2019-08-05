@@ -75,7 +75,25 @@ uint16_t Memory::calc_addr(addr_mode mode, cpu_state state) {
 }
 
 uint8_t Memory::read(uint16_t addr) {
-    return mem[addr];
+    uint8_t ppu_register;
+    switch(addr) {
+        case 0 ... 0x07FF: return mem[addr];        // 2kB internal RAM
+        case 0x0800 ... 0x0FFF: return mem[addr - 0x0800];   // mirror of RAM
+        case 0x1000 ... 0x17FF: return mem[addr - 0x1000];   // mirror of RAM
+        case 0x1800 ... 0x1FFF: return mem[addr - 0x1800];   // mirror of RAM
+        case 0x2000 ... 0x3FFF:
+            // PPU registers: 0x2000 - 0x2007, rest are mirror of these 8 registers
+            ppu_register = (addr - 0x2000) % 8;
+            break;
+        case 0x4000 ... 0x4017: break; // NES APU and I/O registers
+        case 0x4018 ... 0x401F: break; // normally disabled
+        case 0x4020 ... 0xFFFF:
+            // Read from cartridge
+            break;
+        default:
+            break;
+    }
+    return 0x00;
 }
 
 uint16_t Memory::read16(uint16_t addr) {

@@ -1,0 +1,17 @@
+LDX #64
+STX $0750
+LDX #01
+STX $0751
+loop
+JSR shift
+CPX $0750
+BCS end
+JMP loop
+
+shift
+ROL $0751
+LDX $0751
+RTS
+
+end
+BRK

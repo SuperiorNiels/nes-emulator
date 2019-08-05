@@ -32,5 +32,4 @@ private:
 
 };
 
-
 #endif //NES_MEMORY_H

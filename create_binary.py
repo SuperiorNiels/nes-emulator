@@ -5,8 +5,12 @@ parser.add_argument('--file', required=True)
 
 args = parser.parse_args()
 file = open(args.file)
-data = file.read()
-file.close()
+try:
+    data = file.read()
+    file.close()
+except Exception:
+    print("File already encoded correctly!")
+    exit(0)
 
 counter, i = 0, 0
 to_write = bytearray()

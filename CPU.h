@@ -53,6 +53,7 @@ private:
     uint8_t convertFlagsToByte();
     void loadFlagsFromByte(uint8_t byte);
     void printStatus();
+    void printFlags();
 };
 
 

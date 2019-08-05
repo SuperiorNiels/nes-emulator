@@ -13,8 +13,7 @@ CPU::CPU() {
     state.Y = 0x00;
     state.SP = 0x00;
 
-    memset(&flags, 0, 8);
-
+    memset(&flags, 0b0, 8);
     initialize_instructions(&instructions);
 }
 
@@ -32,6 +31,7 @@ void CPU::execute() {
         uint8_t opcode = mem->read(state.PC);
         executeInstruction(instructions[opcode]);
         printStatus();
+        printFlags();
     }
 }
 
@@ -45,7 +45,7 @@ void CPU::update_ZN_flags(uint8_t param) {
     flags[N] = param & 0x80;
 }
 
-void CPU::push_stack(uint8_t value) {                   // TODO:: PC counter is 16b
+void CPU::push_stack(uint8_t value) {
     mem->write(STACK_LOCATION + state.SP++, value);
 }
 
@@ -60,8 +60,8 @@ void CPU::executeInstruction(const instruction& instr) {
 
     mem_loc = mem->calc_addr(instr.mode, state);
     param = mem->read(mem_loc);
-    std::cout << "Operation: " << instr.name << std::endl;
-    printf("Param: %.2X\n", param);
+
+    std::cout << "\nOperation: " <<  instr.name << std::endl;
 
     switch(instr.type) {
         case ADC:
@@ -228,10 +228,15 @@ void CPU::executeInstruction(const instruction& instr) {
         case ROR:
         case RTI:
         case RTS:
-            state.PC = ((pop_stack() << 8) | pop_stack()) + 3;
+            state.PC = (pop_stack() | (pop_stack() << 8)) + 3;
             return;
         case SBC:
-
+            param ^= 0xFF;
+            result = state.AC + param + (uint8_t) flags[C];
+            update_CV_flags(param, result);
+            update_ZN_flags(state.AC);
+            state.AC = result;
+            break;
         case SEC:
             flags[C] = true;
             break;
@@ -301,4 +306,12 @@ void CPU::printStatus() {
     printf("AC: %.2X\n", state.AC);
     printf("X: %.2X\n", state.X);
     printf("Y: %.2X\n", state.Y);
+}
+
+void CPU::printFlags() {
+    printf("Flags:\n");
+    for(uint8_t i = 0; i < 8; i++) {
+        printf("%d", flags[i]);
+    }
+    printf("\nCZIDB-VN\n");
 }

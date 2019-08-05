@@ -14,6 +14,7 @@ CPU::CPU() {
     state.SP = 0x00;
 
     memset(&flags, 0b0, 8);
+    flags[5] = true;
     initialize_instructions(&instructions);
 }
 
@@ -225,8 +226,12 @@ void CPU::executeInstruction(const instruction& instr) {
             loadFlagsFromByte(pop_stack());
             break;
         case ROL:
+            
         case ROR:
         case RTI:
+            loadFlagsFromByte(pop_stack());
+            state.PC = (pop_stack() | (pop_stack() << 8)) + 1;
+            return;
         case RTS:
             state.PC = (pop_stack() | (pop_stack() << 8)) + 3;
             return;

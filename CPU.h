@@ -42,6 +42,7 @@ private:
     bool flags[8];
     std::map<uint8_t, instruction> instructions;
     Memory* mem = nullptr;
+    uint64_t cycles = 0;
 
     void executeInstruction(const instruction& instr);
     void update_CV_flags(uint8_t param, int16_t result);

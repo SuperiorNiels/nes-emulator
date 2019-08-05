@@ -34,6 +34,7 @@ void CPU::execute() {
         printStatus();
         printFlags();
     }
+    std::cout << "Executed: " << cycles << " cycles." << std::endl;
 }
 
 void CPU::update_CV_flags(uint8_t param, int16_t result) {
@@ -57,12 +58,14 @@ uint8_t CPU::pop_stack() {
 
 void CPU::executeInstruction(const instruction& instr) {
     uint8_t param;
-    uint16_t result, mem_loc, temp;
+    uint16_t result, mem_loc;
 
     mem_loc = mem->calc_addr(instr.mode, state);
     param = mem->read(mem_loc);
 
     std::cout << "\nOperation: " <<  instr.name << std::endl;
+
+    cycles += instr.cycles;
 
     switch(instr.type) {
         case ADC:
@@ -77,12 +80,12 @@ void CPU::executeInstruction(const instruction& instr) {
             break;
         case ASL:
             if(instr.mode == ADDR_ACC) {
-                flags[C] = state.AC & 0x40;
+                flags[C] = state.AC & 0x80;
                 state.AC = state.AC << 1u;
                 update_ZN_flags(state.AC);
                 break;
             }
-            flags[C] = param & 0x40;
+            flags[C] = param & 0x80;
             mem->write(mem_loc, param << 1u);
             update_ZN_flags(param);
             break;
@@ -226,15 +229,40 @@ void CPU::executeInstruction(const instruction& instr) {
             loadFlagsFromByte(pop_stack());
             break;
         case ROL:
-            
+            if(instr.mode == ADDR_ACC) {
+                result = flags[C];
+                flags[C] = state.AC & 0x80;
+                state.AC = (state.AC << 1u) | result;
+                update_ZN_flags(state.AC);
+            } else {
+                result = flags[C];
+                flags[C] = param & 0x80;
+                param = (param << 1u) | result;
+                update_ZN_flags(param);
+                mem->write(mem_loc, param);
+            }
+            break;
         case ROR:
+            if(instr.mode == ADDR_ACC) {
+                result = flags[C] << 7;
+                flags[C] = state.AC & 0x01;
+                state.AC = result | (state.AC >> 1);
+                update_ZN_flags(state.AC);
+            } else {
+                result = flags[C] << 7;
+                flags[C] = param & 0x01;
+                param = result | (param >> 1);
+                update_ZN_flags(param);
+                mem->write(mem_loc, param);
+            }
+            break;
         case RTI:
             loadFlagsFromByte(pop_stack());
             state.PC = (pop_stack() | (pop_stack() << 8)) + 1;
-            return;
+            break;
         case RTS:
-            state.PC = (pop_stack() | (pop_stack() << 8)) + 3;
-            return;
+            state.PC = (pop_stack() | (pop_stack() << 8)) + 2;
+            break;
         case SBC:
             param ^= 0xFF;
             result = state.AC + param + (uint8_t) flags[C];

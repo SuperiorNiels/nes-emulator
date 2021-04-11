@@ -1,7 +1,3 @@
-//
-// Created by niels on 04.07.19.
-//
-
 #ifndef NES_INSTRUCTIONS_H
 #define NES_INSTRUCTIONS_H
 

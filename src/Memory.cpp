@@ -1,7 +1,3 @@
-//
-// Created by niels on 7/2/19.
-//
-
 #include "Memory.h"
 
 Memory::Memory() {

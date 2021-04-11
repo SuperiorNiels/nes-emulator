@@ -1,7 +1,3 @@
-//
-// Created by niels on 7/4/19.
-//
-
 #ifndef NES_CONSOLE_H
 #define NES_CONSOLE_H
 

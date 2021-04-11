@@ -1,7 +1,3 @@
-//
-// Created by niels on 7/2/19.
-//
-
 #ifndef NES_MEMORY_H
 #define NES_MEMORY_H
 

@@ -1,7 +1,3 @@
-//
-// Created by niels on 7/2/19.
-//
-
 #ifndef NES_CPU_H
 #define NES_CPU_H
 

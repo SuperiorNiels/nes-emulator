@@ -1,7 +1,5 @@
 import json, enum
 
-from bs4 import BeautifulSoup
-
 class Mode(enum.Enum):
     IMP = 1
     ACC = 2

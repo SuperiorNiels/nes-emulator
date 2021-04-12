@@ -12,9 +12,9 @@ public:
     Window_SDL() : Window() {};
     Window_SDL(const char* title, const int width, const int height) : Window(title, width, height) {};
     
-    bool initWindow() override;
+    bool init() override;
     void update() override;
-    void closeWindow() override;
+    void close() override;
 
     ~Window_SDL() override {};
 

@@ -1,7 +1,6 @@
 #include "SDL/Window_SDL.h"
 
-
-bool Window_SDL::initWindow() {
+bool Window_SDL::init() {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
         return 0;
@@ -15,9 +14,10 @@ bool Window_SDL::initWindow() {
             updateScreen();
 		}
 	}
+    return true;
 }
 
-void Window_SDL::closeWindow() {
+void Window_SDL::close() {
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 }

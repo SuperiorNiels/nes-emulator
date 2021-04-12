@@ -8,9 +8,9 @@ public:
     Window(const char* title, const int width, const int height) : 
         title(title), width(width), height(height), is_open(true) {};
     
-    virtual bool initWindow() = 0;
+    virtual bool init() = 0;
     virtual void update() = 0;
-    virtual void closeWindow() = 0;
+    virtual void close() = 0;
 
     bool isOpen() const { return is_open; };
 

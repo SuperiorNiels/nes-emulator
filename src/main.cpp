@@ -7,11 +7,16 @@ const char* WINDOW_TITLE = "NES Emulator";
 const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
 
-int main(int argc, char* args[])
+int WinMain(int argc, char* args[])
 {
 	auto windowFactory = WindowFactory_SDL();
-	//auto window = windowFactory.createWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+    auto window = windowFactory.createWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    while(window->isOpen()) {
+        window->update();
+    }
+
+    window->close();
 	//auto window = Window_SDL();
 
     Console c;

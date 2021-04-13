@@ -24,6 +24,7 @@ private:
 
     SDL_Window* window = nullptr;
 	SDL_Surface* screenSurface = nullptr;
+    bool fps_toggle = false;
 };
 
 

@@ -16,10 +16,11 @@ file(GLOB_RECURSE SRC_FILES
 )
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(FindPkgConfig)
+pkg_search_module(SDL2 REQUIRED sdl2)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} SDL2::Core)
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 
 
 

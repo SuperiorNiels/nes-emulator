@@ -4,7 +4,7 @@
 
 class Window {
 public:
-    Window() : title("Window"), width(500), height(500) {};
+    Window() : title("Window"), width(500), height(500), is_open(true) {};
     Window(const char* title, const int width, const int height) : 
         title(title), width(width), height(height), is_open(true) {};
     
@@ -14,12 +14,19 @@ public:
 
     bool isOpen() const { return is_open; };
 
+    void setFPS(int fps) { this->fps = fps; };
+
+    int getFPS() const { return fps; };
+
     virtual ~Window() { delete title; };
 
 protected:
     const char* title = nullptr;
     int width, height;
     bool is_open;
+
+    // predefined variables
+    int fps = 60;
 };
 
 

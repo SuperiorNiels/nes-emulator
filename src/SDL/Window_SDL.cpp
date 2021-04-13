@@ -26,10 +26,12 @@ void Window_SDL::update() {
     // Check events and render
     updateEvents();
     updateScreen();
+    SDL_Delay(1000 / fps);
 }
 
 void Window_SDL::updateEvents() {
     SDL_Event event;
+    bool keydown = false;
     while(SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_QUIT:
@@ -44,6 +46,6 @@ void Window_SDL::updateEvents() {
 }
 
 void Window_SDL::updateScreen() {
-    SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0x00, 0xFF));
+    SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
 	SDL_UpdateWindowSurface(window);
 }

@@ -2,6 +2,7 @@
 #include "Console.h"
 #include "SDL/Window_SDL.h"
 
+#include "imgui/imgui.h"
 
 const char* WINDOW_TITLE = "NES Emulator";
 const int WINDOW_WIDTH = 640;

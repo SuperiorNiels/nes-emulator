@@ -5,9 +5,6 @@
 #include <SDL2/SDL.h>
 
 #include "Window.h"
-#include "imgui.h"
-#include "backends/imgui_impl_sdl.h"
-#include "backends/imgui_impl_opengl3.h"
 
 class Window_SDL : public Window {
 public:

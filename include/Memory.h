@@ -15,10 +15,10 @@ public:
     Memory();
 
     void loadBinary(const char* filename);
-    uint16_t calc_addr(addr_mode mode, cpu_state state);
-    uint8_t read(uint16_t addr);
-    uint16_t read16(uint16_t addr);
-    void write(uint16_t addr, uint8_t data);
+    uint16_t calc_addr(int32_t& cycles, addr_mode mode, cpu_state state);
+    uint8_t read(int32_t& cycles, uint16_t addr);
+    uint16_t read16(int32_t& cycles, uint16_t addr);
+    void write(int32_t& cycles, uint16_t addr, uint8_t data);
     void dump();
 
     void reset();

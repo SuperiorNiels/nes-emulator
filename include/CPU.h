@@ -31,20 +31,19 @@ public:
     CPU();
 
     void attachMemeory(Memory* memory);
-    void setProgramCounter(uint16_t pc);
-    void execute();
+    void execute(int32_t& cycles);
+    void reset();
 private:
     cpu_state state{};
     bool flags[8];
     std::map<uint8_t, instruction> instructions;
     Memory* mem = nullptr;
-    uint64_t cycles = 0;
 
-    void executeInstruction(const instruction& instr);
+    void executeInstruction(int32_t& cycles, const instruction& instr);
     void update_CV_flags(uint8_t param, int16_t result);
     void update_ZN_flags(uint8_t param);
-    void push_stack(uint8_t value);
-    uint8_t pop_stack();
+    void push_stack(int32_t& cycles, uint8_t value);
+    uint8_t pop_stack(int32_t& cycles);
 
     // Helper functions
     uint8_t convertFlagsToByte();

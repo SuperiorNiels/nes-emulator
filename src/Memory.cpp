@@ -29,7 +29,7 @@ void Memory::loadBinary(const char *filename) {
     file.close();
 }
 
-uint16_t Memory::calc_addr(addr_mode mode, cpu_state state) {
+uint16_t Memory::calc_addr(int32_t& cycles, addr_mode mode, cpu_state state) {
     uint16_t temp;
 
     switch(mode) {
@@ -49,19 +49,19 @@ uint16_t Memory::calc_addr(addr_mode mode, cpu_state state) {
             //return mem[state.PC + temp];
             return state.PC + 1;
         case ADDR_ABS:
-            return read16(state.PC + 1);
+            return read16(cycles, state.PC + 1);
         case ADDR_ABX:
-            return read16(state.PC + 1) + state.X;
+            return read16(cycles, state.PC + 1) + state.X;
         case ADDR_ABY:
-            return read16(state.PC + 1) + state.Y;
+            return read16(cycles, state.PC + 1) + state.Y;
         case ADDR_IND:
-            temp = read16(state.PC + 1);
+            temp = read16(cycles, state.PC + 1);
             return mem[temp] | (mem[temp + 1] << 8);
         case ADDR_INX:
-            temp = (read16(state.PC + 1) + state.X) % 0xFF;
+            temp = (read16(cycles, state.PC + 1) + state.X) % 0xFF;
             return mem[temp] | (mem[temp + 1] << 8);
         case ADDR_INY:
-            temp = read16(state.PC + 1);
+            temp = read16(cycles, state.PC + 1);
             return mem[temp] | (mem[temp + 1] << 8) + state.Y;
         default:
             std::cout << "ERROR: wrong addressing mode" << std::endl;
@@ -70,9 +70,10 @@ uint16_t Memory::calc_addr(addr_mode mode, cpu_state state) {
     return 0x0000;
 }
 
-uint8_t Memory::read(uint16_t addr) {
+uint8_t Memory::read(int32_t& cycles,uint16_t addr) {
     uint8_t ppu_register;
-    switch(addr) {
+    cycles--; // alyways use 1 cycle for reading
+    /*switch(addr) {
         case 0 ... 0x07FF: return mem[addr];        // 2kB internal RAM
         case 0x0800 ... 0x0FFF: return mem[addr - 0x0800];   // mirror of RAM
         case 0x1000 ... 0x17FF: return mem[addr - 0x1000];   // mirror of RAM
@@ -88,15 +89,19 @@ uint8_t Memory::read(uint16_t addr) {
             break;
         default:
             break;
-    }
-    return 0x00;
+    }*/
+    return mem[addr];
+    //return 0x00;
 }
 
-uint16_t Memory::read16(uint16_t addr) {
+uint16_t Memory::read16(int32_t& cycles, uint16_t addr) {
+    cycles--;
+    cycles--;
     return (mem[addr] | (mem[addr + 1] << 8));
 }
 
-void Memory::write(uint16_t addr, uint8_t data) {
+void Memory::write(int32_t& cycles, uint16_t addr, uint8_t data) {
+    cycles--;
     mem[addr] = data;
 }
 

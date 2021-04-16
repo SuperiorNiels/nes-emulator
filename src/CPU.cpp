@@ -3,7 +3,11 @@
 #include "Memory.h"
 
 CPU::CPU() {
-    state.PC = 0x0000;
+    initialize_instructions(&instructions);
+}
+
+void CPU::reset() {
+    state.PC = 0x0400;
     state.AC = 0x00;
     state.X = 0x00;
     state.Y = 0x00;
@@ -11,26 +15,26 @@ CPU::CPU() {
 
     memset(&flags, 0b0, 8);
     flags[5] = true;
-    initialize_instructions(&instructions);
+    if (mem != nullptr) {
+        mem->reset();
+    }
 }
 
 void CPU::attachMemeory(Memory* memory) {
     CPU::mem = memory;
 }
 
-void CPU::setProgramCounter(uint16_t pc) {
-    state.PC = pc;
-}
-
-void CPU::execute() {
-    state.PC = 0x0000;
-    while(!flags[B]) {
-        uint8_t opcode = mem->read(state.PC);
-        executeInstruction(instructions[opcode]);
-        printStatus();
-        printFlags();
+void CPU::execute(int32_t& cycles) {
+    while(!flags[B] && cycles > 0) {
+        uint8_t opcode = mem->read(cycles, state.PC);
+        if(instructions.find(opcode) != instructions.end()) {
+            executeInstruction(cycles, instructions[opcode]);
+            //printStatus();
+            //printFlags();
+        } else {
+            printf("Opcode %2x not found.\n", opcode);
+        }
     }
-    std::cout << "Executed: " << cycles << " cycles." << std::endl;
 }
 
 void CPU::update_CV_flags(uint8_t param, int16_t result) {
@@ -43,25 +47,23 @@ void CPU::update_ZN_flags(uint8_t param) {
     flags[N] = param & 0x80;
 }
 
-void CPU::push_stack(uint8_t value) {
-    mem->write(STACK_LOCATION + state.SP++, value);
+void CPU::push_stack(int32_t& cycles, uint8_t value) {
+    mem->write(cycles, STACK_LOCATION + state.SP++, value);
 }
 
-uint8_t CPU::pop_stack() {
+uint8_t CPU::pop_stack(int32_t& cycles) {
     state.SP--;
-    return mem->read(STACK_LOCATION + state.SP);
+    return mem->read(cycles, STACK_LOCATION + state.SP);
 }
 
-void CPU::executeInstruction(const instruction& instr) {
+void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
     uint8_t param;
     uint16_t result, mem_loc;
 
-    mem_loc = mem->calc_addr(instr.mode, state);
-    param = mem->read(mem_loc);
+    mem_loc = mem->calc_addr(cycles, instr.mode, state);
+    param = mem->read(cycles, mem_loc);
 
     std::cout << "\nOperation: " <<  instr.name << std::endl;
-
-    cycles += instr.cycles;
 
     switch(instr.type) {
         case ADC:
@@ -82,7 +84,7 @@ void CPU::executeInstruction(const instruction& instr) {
                 break;
             }
             flags[C] = param & 0x80;
-            mem->write(mem_loc, param << 1u);
+            mem->write(cycles, mem_loc, param << 1u);
             update_ZN_flags(param);
             break;
         case BCC:
@@ -109,10 +111,10 @@ void CPU::executeInstruction(const instruction& instr) {
             if(!flags[N]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BRK:
-            push_stack(state.PC >> 8);
-            push_stack(state.PC);
-            push_stack(convertFlagsToByte());
-            state.PC = mem->read16(0xFFFE);
+            push_stack(cycles, state.PC >> 8);
+            push_stack(cycles, state.PC);
+            push_stack(cycles, convertFlagsToByte());
+            state.PC = mem->read16(cycles, 0xFFFE);
             flags[B] = true;
             break;
         case BVC:
@@ -146,7 +148,7 @@ void CPU::executeInstruction(const instruction& instr) {
             update_ZN_flags(state.Y - param);
             break;
         case DEC:
-            mem->write(mem_loc, param - 1);
+            mem->write(cycles, mem_loc, param - 1);
             update_ZN_flags(param - 1);
             break;
         case DEX:
@@ -162,7 +164,7 @@ void CPU::executeInstruction(const instruction& instr) {
             update_ZN_flags(state.AC);
             break;
         case INC:
-            mem->write(mem_loc, param + 1);
+            mem->write(cycles, mem_loc, param + 1);
             update_ZN_flags(param + 1);
             break;
         case INX:
@@ -177,8 +179,8 @@ void CPU::executeInstruction(const instruction& instr) {
             state.PC = mem_loc; // TODO: implement 6502 bug on page boundry?
             return;
         case JSR:
-            push_stack(state.PC >> 8);
-            push_stack(state.PC);
+            push_stack(cycles, state.PC >> 8);
+            push_stack(cycles, state.PC);
             state.PC = mem_loc;
             return;
         case LDA:
@@ -202,7 +204,7 @@ void CPU::executeInstruction(const instruction& instr) {
                 break;
             }
             flags[C] = (param & 0x01) != 0;
-            mem->write(mem_loc, param >> 1u);
+            mem->write(cycles, mem_loc, param >> 1u);
             update_ZN_flags(param);
             break;
         case NOP:
@@ -212,17 +214,17 @@ void CPU::executeInstruction(const instruction& instr) {
             update_ZN_flags(state.AC);
             break;
         case PHA:
-            push_stack(state.AC);
+            push_stack(cycles, state.AC);
             break;
         case PHP:
-            push_stack(convertFlagsToByte());
+            push_stack(cycles, convertFlagsToByte());
             break;
         case PLA:
-            state.AC = pop_stack();
+            state.AC = pop_stack(cycles);
             update_ZN_flags(state.AC);
             break;
         case PLP:
-            loadFlagsFromByte(pop_stack());
+            loadFlagsFromByte(pop_stack(cycles));
             break;
         case ROL:
             if(instr.mode == ADDR_ACC) {
@@ -235,7 +237,7 @@ void CPU::executeInstruction(const instruction& instr) {
                 flags[C] = param & 0x80;
                 param = (param << 1u) | result;
                 update_ZN_flags(param);
-                mem->write(mem_loc, param);
+                mem->write(cycles, mem_loc, param);
             }
             break;
         case ROR:
@@ -249,15 +251,15 @@ void CPU::executeInstruction(const instruction& instr) {
                 flags[C] = param & 0x01;
                 param = result | (param >> 1);
                 update_ZN_flags(param);
-                mem->write(mem_loc, param);
+                mem->write(cycles, mem_loc, param);
             }
             break;
         case RTI:
-            loadFlagsFromByte(pop_stack());
-            state.PC = (pop_stack() | (pop_stack() << 8)) + 1;
+            loadFlagsFromByte(pop_stack(cycles));
+            state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 1;
             break;
         case RTS:
-            state.PC = (pop_stack() | (pop_stack() << 8)) + 2;
+            state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 2;
             break;
         case SBC:
             param ^= 0xFF;
@@ -276,13 +278,13 @@ void CPU::executeInstruction(const instruction& instr) {
             flags[I] = true;
             break;
         case STA:
-            mem->write(mem_loc, state.AC);
+            mem->write(cycles, mem_loc, state.AC);
             break;
         case STX:
-            mem->write(mem_loc, state.X);
+            mem->write(cycles, mem_loc, state.X);
             break;
         case STY:
-            mem->write(mem_loc, state.Y);
+            mem->write(cycles, mem_loc, state.Y);
             break;
         case TAX:
             state.X = state.AC;
@@ -308,12 +310,13 @@ void CPU::executeInstruction(const instruction& instr) {
             update_ZN_flags(state.AC);
             break;
         default:
-            std::cout << "Unrecognized opcode, HALT!" << std::endl;
-            flags[B] = true;
+            std::cout << "Unrecognized opcode!" << std::endl;
+            //flags[B] = true;
             break;
     }
 
     state.PC += instr.bytes;
+    cycles--; // the actual operation cycle
 }
 
 uint8_t CPU::convertFlagsToByte() {
@@ -333,6 +336,7 @@ void CPU::printStatus() {
     printf("------ CPU State dump ------\n");
     printf("PC: %.2X\n", state.PC);
     printf("AC: %.2X\n", state.AC);
+    printf("SP: %.2X\n", state.SP);
     printf("X: %.2X\n", state.X);
     printf("Y: %.2X\n", state.Y);
 }

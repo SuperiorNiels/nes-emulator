@@ -1,6 +1,7 @@
 #ifndef NES_WINDOW_H
 #define NES_WINDOW_H
 
+#include "Console.h"
 
 class Window {
 public:
@@ -13,20 +14,23 @@ public:
     virtual void close() = 0;
 
     bool isOpen() const { return is_open; };
-
     void setFPS(int fps) { this->fps = fps; };
-
     int getFPS() const { return fps; };
+
+    void attachConsole(const Console* console) { this->console = console; }
 
     virtual ~Window() { delete title; };
 
 protected:
+    // Window vars
     const char* title = nullptr;
     int width, height;
     bool is_open;
-
-    // predefined variables
     int fps = 60;
+
+    // Console vars
+    const Console* console = nullptr;
+    const char* glsl_version;
 };
 
 

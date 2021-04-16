@@ -13,7 +13,6 @@ public:
     void loadROM(const char* filename);
     void run();
 
-private:
     Memory mem;
     CPU cpu;
 

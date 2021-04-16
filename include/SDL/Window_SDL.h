@@ -1,11 +1,13 @@
 #ifndef NES_WINDOWSDL_H
 #define NES_WINDOWSDL_H
 
-#include <SDL2/SDL.h>
 #include <iostream>
+#include <SDL2/SDL.h>
 
 #include "Window.h"
-
+#include "imgui.h"
+#include "backends/imgui_impl_sdl.h"
+#include "backends/imgui_impl_opengl3.h"
 
 class Window_SDL : public Window {
 public:
@@ -23,7 +25,6 @@ private:
     void updateScreen();
 
     SDL_Window* window = nullptr;
-	SDL_Surface* screenSurface = nullptr;
     bool fps_toggle = false;
 };
 

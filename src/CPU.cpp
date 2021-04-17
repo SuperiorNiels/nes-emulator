@@ -26,21 +26,22 @@ void CPU::attachMemeory(Memory* memory) {
 
 void CPU::execute(int32_t& cycles) {
     bool debug = false;
+    uint16_t prev_pc = 0;
     while(cycles > 0) {
-        if(state.PC == 0x3776) {
-            debug = true;
-            std::cout << "Started debug" << std::endl;
-        }
+        // debug when stuck
+        if(state.PC == prev_pc) debug = true;
+        prev_pc = state.PC;
+        // debug specific mem address
+        //if(state.PC == 0x3776) debug = true;
+        // get opcode
         uint8_t opcode = mem->read(cycles, state.PC);
-        if(instructions.find(opcode) != instructions.end()) {
-            if(debug) printf("Current PC: %2x, Opcode: %s (%2X)\n", state.PC, instructions[opcode].name.c_str(), opcode);
-            executeInstruction(cycles, instructions[opcode]);
+        if(debug) {
+            printf("Current PC: %2x, Opcode: %s (%2X)\n", state.PC, instructions[opcode].name.c_str(), opcode);
             //printStatus();
             //printFlags();
-        } else {
-            printf("Opcode %2x not found.\n", opcode);
-            if(debug) printf("Current PC: %2x, Opcode: %2X\n", state.PC, opcode);
         }
+        if(instructions.find(opcode) != instructions.end()) executeInstruction(cycles, instructions[opcode]);
+        else printf("Opcode %2X not found.\n", opcode);
     }
 }
 

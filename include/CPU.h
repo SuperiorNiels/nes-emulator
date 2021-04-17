@@ -4,7 +4,7 @@
 #include <stdint-gcc.h>
 #include "Instructions.h"
 
-#define STACK_LOCATION 0x64
+#define STACK_LOCATION 0x0100 // second page resevered for stack
 
 class Memory;
 
@@ -46,7 +46,7 @@ private:
     uint8_t pop_stack(int32_t& cycles);
 
     // Helper functions
-    uint8_t convertFlagsToByte();
+    uint8_t convertFlagsToByte(bool brk_flag);
     void loadFlagsFromByte(uint8_t byte);
     void printStatus();
     void printFlags();

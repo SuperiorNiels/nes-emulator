@@ -14,10 +14,9 @@ void CPU::reset() {
     state.SP = 0xFF;
 
     memset(&flags, 0b0, 8);
+    flags[4] = true;
     flags[5] = true;
-    if (mem != nullptr) {
-        mem->reset();
-    }
+    if (mem) mem->reset();
 }
 
 void CPU::attachMemeory(Memory* memory) {
@@ -27,22 +26,35 @@ void CPU::attachMemeory(Memory* memory) {
 void CPU::execute(int32_t& cycles) {
     bool debug = false;
     uint16_t prev_pc = 0;
+    uint16_t debug_mem_addr = 0x0206;
+    uint8_t prev_mem = mem->read(cycles, debug_mem_addr);
+    uint8_t curr_mem;
     while(cycles > 0) {
+
         // debug when stuck
         if(state.PC == prev_pc) debug = true;
         prev_pc = state.PC;
         // debug specific mem address
-        if(state.PC == 0x09c7) debug = true;
+        if(state.PC == 0x0f32) debug = true;
+        // debug when specific mem address changes
+        curr_mem = mem->read(cycles, debug_mem_addr);
+        //if(curr_mem != prev_mem) debug = true;
+        prev_mem = curr_mem;
+        
         // get opcode
         uint8_t opcode = mem->read(cycles, state.PC);
+        
         if(debug) {
             //uint16_t mem_loc = 0x01fe;
             //printf("Mem[%4x]: %2x\n", mem_loc, mem->read(cycles, mem_loc));
             //debugPrintStack(cycles);
             printf("Current PC: %2x, Opcode: %s (%2X)\n", state.PC, instructions[opcode].name.c_str(), opcode);
+            printf("[%4x]: %2x\n", 0x0206, mem->read(cycles, 0x0206));
             //printStatus();
             //printFlags();
         }
+
+        // execute instruction
         if(instructions.find(opcode) != instructions.end()) executeInstruction(cycles, instructions[opcode]);
         else printf("Opcode %2X not found.\n", opcode);
     }
@@ -122,13 +134,14 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             if(!flags[N]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BRK:
-            result = state.PC + instr.bytes - 1;
+            result = state.PC + instr.bytes + 1;
             push_stack(cycles, result >> 8);
             push_stack(cycles, result);
             push_stack(cycles, convertFlagsToByte(true));
             state.PC = mem->read16(cycles, 0xFFFE);
             flags[B] = true;
-            break;
+            flags[I] = true;
+            return;
         case BVC:
             if(!flags[V]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
@@ -268,7 +281,7 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             break;
         case RTI:
             loadFlagsFromByte(pop_stack(cycles));
-            state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 1;
+            state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8));
             return;
         case RTS:
             state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 1;

@@ -39,14 +39,12 @@ uint16_t Memory::calc_addr(int32_t& cycles, addr_mode mode, cpu_state state) {
         case ADDR_IMM:
             return state.PC + 1;
         case ADDR_ZER:
-            return mem[state.PC + 1];
+            return read(cycles, state.PC + 1);
         case ADDR_ZEX:
-            return mem[state.PC++] + state.X;
+            return read(cycles, state.PC + 1) + state.X;
         case ADDR_ZEY:
-            return mem[state.PC++] + state.Y;
+            return read(cycles, state.PC + 1) + state.Y;
         case ADDR_REL:
-            //temp = (int8_t) mem[state.PC + 1];
-            //return mem[state.PC + temp];
             return state.PC + 1;
         case ADDR_ABS:
             return read16(cycles, state.PC + 1);

@@ -32,10 +32,13 @@ void CPU::execute(int32_t& cycles) {
         if(state.PC == prev_pc) debug = true;
         prev_pc = state.PC;
         // debug specific mem address
-        //if(state.PC == 0x3776) debug = true;
+        if(state.PC == 0x09c7) debug = true;
         // get opcode
         uint8_t opcode = mem->read(cycles, state.PC);
         if(debug) {
+            //uint16_t mem_loc = 0x01fe;
+            //printf("Mem[%4x]: %2x\n", mem_loc, mem->read(cycles, mem_loc));
+            //debugPrintStack(cycles);
             printf("Current PC: %2x, Opcode: %s (%2X)\n", state.PC, instructions[opcode].name.c_str(), opcode);
             //printStatus();
             //printFlags();
@@ -72,7 +75,7 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
     param = mem->read(cycles, mem_loc);
 
     //std::cout << "\nOperation: " <<  instr.name << std::endl;
-
+    cycles--; // the actual operation cycle
     switch(instr.type) {
         case ADC:
             result = state.AC + param + (uint8_t) flags[C];
@@ -119,8 +122,9 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             if(!flags[N]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BRK:
-            push_stack(cycles, state.PC >> 8);
-            push_stack(cycles, state.PC);
+            result = state.PC + instr.bytes - 1;
+            push_stack(cycles, result >> 8);
+            push_stack(cycles, result);
             push_stack(cycles, convertFlagsToByte(true));
             state.PC = mem->read16(cycles, 0xFFFE);
             flags[B] = true;
@@ -187,8 +191,9 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             state.PC = mem_loc; // TODO: implement 6502 bug on page boundry?
             return;
         case JSR:
-            push_stack(cycles, state.PC >> 8);
-            push_stack(cycles, state.PC);
+            result = state.PC + instr.bytes - 1;
+            push_stack(cycles, result >> 8);
+            push_stack(cycles, result);
             state.PC = mem_loc;
             return;
         case LDA:
@@ -264,10 +269,10 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
         case RTI:
             loadFlagsFromByte(pop_stack(cycles));
             state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 1;
-            break;
+            return;
         case RTS:
-            state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 2;
-            break;
+            state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 1;
+            return;
         case SBC:
             param ^= 0xFF;
             result = state.AC + param + (uint8_t) flags[C];
@@ -323,7 +328,6 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
     }
 
     state.PC += instr.bytes;
-    cycles--; // the actual operation cycle
 }
 
 uint8_t CPU::convertFlagsToByte(bool brk_flag) {
@@ -358,4 +362,14 @@ void CPU::printFlags() {
         printf("%d", flags[i]);
     }
     printf("\nCZIDB-VN\n");
+}
+
+void CPU::debugPrintStack(int32_t& cycles) {
+    uint8_t current_sp = state.SP;
+    printf("Current stack (start: %4x)\n", STACK_LOCATION + state.SP);
+    do {
+        uint16_t loc = STACK_LOCATION + current_sp;
+        printf("[%4x]: %2x\n", loc, mem->read(cycles, loc));
+        current_sp++;
+    } while(current_sp != 0);
 }

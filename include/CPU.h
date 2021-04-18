@@ -50,6 +50,8 @@ private:
     void loadFlagsFromByte(uint8_t byte);
     void printStatus();
     void printFlags();
+
+    void debugPrintStack(int32_t& cycles);
 };
 
 

@@ -17,7 +17,7 @@ void Memory::loadBinary(const char *filename) {
         return;
     }
 
-    char buffer[MAX_MEM];
+    char buffer[MAX_MEM + 1];
     if(!file.read(buffer, size)) {
         std::cout << "Something went wrong while reading file" << std::endl;
         file.close();
@@ -25,7 +25,7 @@ void Memory::loadBinary(const char *filename) {
     }
 
     std::cout << "File loaded." << std::endl;
-    memcpy(mem, buffer, MAX_MEM);
+    memcpy(mem, buffer, MAX_MEM + 1);
     file.close();
 }
 

@@ -1,12 +1,20 @@
 #ifndef NES_CPU_H
 #define NES_CPU_H
 
+#include <iostream>
 #include <stdint-gcc.h>
 #include "Instructions.h"
 
 #define STACK_LOCATION 0x0100 // second page resevered for stack
 
 class Memory;
+
+typedef enum {
+    BREAK = 0,
+    IRQ = 1,
+    NMI = 2,
+    RESET = 3
+} cpu_signals;
 
 typedef enum {
     C = 0, // Carry
@@ -33,27 +41,36 @@ public:
     CPU();
 
     void attachMemeory(Memory* memory);
-    void execute(int32_t &cycles);
-    void reset();
-private:
-    cpu_state state{};
-    bool flags[8];
-    std::map<uint8_t, instruction> instructions;
-    Memory* mem = nullptr;
+    void execute(int64_t max_cycles);
 
-    void executeInstruction(int32_t& cycles, const instruction& instr);
+    // Signal interactions
+    bool const readCPUSignal(cpu_signals signal);
+    void setCPUSignal(cpu_signals signal, bool state);
+
+private:
+    bool flags[8];
+    cpu_state state{};
+    Memory* mem = nullptr;
+    std::map<uint8_t, instruction> instructions;
+    
+    int64_t cycles = 0;
+    std::map<const cpu_signals, bool> signals;
+
+    void nmi();
+    void irq();
+    void reset();
+    void executeInstruction(int64_t& cycles, const instruction& instr);
     void update_CV_flags(uint8_t param, int16_t result);
     void update_ZN_flags(uint8_t param);
-    void push_stack(int32_t& cycles, uint8_t value);
-    uint8_t pop_stack(int32_t& cycles);
+    void push_stack(int64_t& cycles, uint8_t value);
+    uint8_t pop_stack(int64_t& cycles);
 
     // Helper functions
     uint8_t convertFlagsToByte(bool brk_flag);
     void loadFlagsFromByte(uint8_t byte);
     void printStatus();
     void printFlags();
-
-    void debugPrintStack(int32_t& cycles);
+    void printFullState();
 };
 
 

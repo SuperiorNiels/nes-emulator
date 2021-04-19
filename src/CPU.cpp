@@ -1,9 +1,13 @@
-#include <iostream>
 #include "CPU.h"
 #include "Memory.h"
 
 CPU::CPU() {
     initialize_instructions(&instructions);
+    // Set cpu signals
+    signals.emplace(BREAK, false);
+    signals.emplace(IRQ, false);
+    signals.emplace(NMI, false);
+    signals.emplace(RESET, false);
 }
 
 void CPU::reset() {
@@ -16,34 +20,46 @@ void CPU::reset() {
     memset(&flags, 0b0, 8);
     flags[4] = true;
     flags[5] = true;
-    if (mem) mem->reset();
+    printf("RESET\n");
+    signals[RESET] = false;
+}
+
+void CPU::irq() {
+    printf("IRQ\n");
+    signals[IRQ] = false;
+}
+
+void CPU::nmi() {
+    printf("NMI\n");
+    signals[NMI] = false;
+}
+
+bool const CPU::readCPUSignal(cpu_signals signal) { 
+    return signals[signal]; 
+}
+
+void CPU::setCPUSignal(cpu_signals signal, bool state) {
+    signals[signal] = state;
 }
 
 void CPU::attachMemeory(Memory* memory) {
     CPU::mem = memory;
 }
 
-void CPU::execute(int32_t &cycles) {
-    bool debug = true;
-    uint16_t prev_pc = 0;
+void CPU::execute(int64_t max_cycles) {
+    while(cycles <= max_cycles) {
+        if(state.PC == 0x336d) {
+            printf("Reached end PC successfully with %d cycles (all tests succeeded!)\n", cycles);
+            break;
+        }
 
-    while(cycles < 100000) {
-
-        // debug when stuck
-        if(state.PC == prev_pc) debug = true;
-        prev_pc = state.PC;
-        // debug specific mem address
-        if(state.PC == 0x346c) debug = true;
+        // Check CPU flags
+        if(signals[IRQ]) irq();
+        if(signals[NMI]) nmi();
+        if(signals[RESET]) reset();
 
         // get opcode
         uint8_t opcode = mem->read(cycles, state.PC);
-
-        if(debug) {
-            printf("Cycle: %5d, current opcode: %s (%2X) ", cycles, instructions[opcode].name.c_str(), opcode);
-            printStatus();
-            printFlags();
-            printf("\n");
-        }
 
         // execute instruction
         if(instructions.find(opcode) != instructions.end()) executeInstruction(cycles, instructions[opcode]);
@@ -61,11 +77,11 @@ void CPU::update_ZN_flags(uint8_t param) {
     flags[N] = param & 0x80;
 }
 
-void CPU::push_stack(int32_t& cycles, uint8_t value) {
+void CPU::push_stack(int64_t& cycles, uint8_t value) {
     mem->write(cycles, STACK_LOCATION + state.SP--, value);
 }
 
-uint8_t CPU::pop_stack(int32_t& cycles) {
+uint8_t CPU::pop_stack(int64_t& cycles) {
     state.SP++;
     return mem->read(cycles, STACK_LOCATION + state.SP);
 }
@@ -88,7 +104,7 @@ void CPU::loadFlagsFromByte(uint8_t byte) {
 }
 
 void CPU::printStatus() {
-    printf("\t [PC]: %2X [AC]: %2X [SP]: %.2X [X]: %2X [Y]: %2X",
+    printf("\t[PC]: %4X [AC]: %2X [SP]: %4X [X]: %2X [Y]: %2X",
             state.PC, state.AC, state.SP, state.X, state.Y);
 }
 
@@ -100,17 +116,17 @@ void CPU::printFlags() {
     }
 }
 
-void CPU::debugPrintStack(int32_t& cycles) {
-    uint8_t current_sp = state.SP;
-    printf("Current stack (start: %4x)\n", STACK_LOCATION + state.SP);
-    do {
-        uint16_t loc = STACK_LOCATION + current_sp;
-        printf("[%4x]: %2x\n", loc, mem->read(cycles, loc));
-        current_sp++;
-    } while(current_sp != 0);
+void CPU::printFullState() {
+    int64_t tmp = 0; // use tmp cycles variable so the used cylces are incremented (not actually part of the prg) 
+    uint8_t opcode = mem->read(tmp, state.PC);
+    printf("Opcode: %s (%2X) ", instructions[opcode].name.c_str(), opcode);
+    printStatus();
+    printFlags();
+    printf("\tCycles: %d", cycles);
+    printf("\n");
 }
 
-void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
+void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
     uint8_t param;
     uint16_t result, mem_loc;
 
@@ -122,6 +138,7 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
     cycles ++; // cycle for the execution of the instrcution
     switch(instr.type) {
         case ADC:
+            if(flags[D]) { printf("Decimal mode not supported!"); break; }
             result = (uint16_t) state.AC + (uint16_t) param + (uint16_t) flags[C];
             update_CV_flags(param, result);
             update_ZN_flags(result);
@@ -322,6 +339,7 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 1;
             return;
         case SBC:
+            if(flags[D]) { printf("Decimal mode not supported!"); break; }
             param ^= 0xFF;
             result = (uint16_t) state.AC + (uint16_t) param + (uint16_t) flags[C];
             update_CV_flags(param, result);

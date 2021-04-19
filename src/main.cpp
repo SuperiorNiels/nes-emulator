@@ -9,11 +9,9 @@ const int WINDOW_HEIGHT = 480;
 int main(int argc, char* args[])
 {
     Console c;
-    c.cpu.reset();
-    c.loadROM("../6502_samples/6502_functional_test.bin");
-    int32_t cycles = 0;
-    c.cpu.execute(cycles);
-    std::cout << "Ran for " << cycles << " cycles." << std::endl;
-    
+    c.loadROM("D:\\4.Code\\NES-emu\\6502_samples\\test_roms\\functional_test_no_decimal_ops.bin");
+    c.cpu.setCPUSignal(RESET, true);
+    c.cpu.execute(100000000);
+    printf("Program exit.\n");
     return 0;
 }

@@ -29,7 +29,7 @@ void Memory::loadBinary(const char *filename) {
     file.close();
 }
 
-uint16_t Memory::calc_addr(int32_t& cycles, addr_mode mode, cpu_state state) {
+uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, cpu_state state) {
     uint16_t temp;
 
     switch(mode) {
@@ -68,7 +68,7 @@ uint16_t Memory::calc_addr(int32_t& cycles, addr_mode mode, cpu_state state) {
     return 0x0000;
 }
 
-uint8_t Memory::read(int32_t& cycles,uint16_t addr) {
+uint8_t Memory::read(int64_t& cycles,uint16_t addr) {
     uint8_t ppu_register;
     cycles++; // alyways use 1 cycle for reading
     /*switch(addr) {
@@ -92,30 +92,17 @@ uint8_t Memory::read(int32_t& cycles,uint16_t addr) {
     //return 0x00;
 }
 
-uint16_t Memory::read16(int32_t& cycles, uint16_t addr) {
+uint16_t Memory::read16(int64_t& cycles, uint16_t addr) {
     cycles++;
     cycles++;
     return (mem[addr] | (mem[addr + 1] << 8));
 }
 
-void Memory::write(int32_t& cycles, uint16_t addr, uint8_t data) {
+void Memory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
     cycles++;
     mem[addr] = data;
 }
 
 void Memory::reset() {
     memset(mem, 0, 0xFFFF);
-}
-
-void Memory::dump() {
-    uint8_t count = 1;
-    for(unsigned char i : mem) {
-        printf("%.2X ", i);
-        if(count == 8) {
-            printf("\n");
-            count = 0;
-        }
-        count++;
-    }
-    printf("\n");
 }

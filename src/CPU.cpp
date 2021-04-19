@@ -10,6 +10,10 @@ CPU::CPU() {
     signals.emplace(RESET, false);
 }
 
+cpu_state CPU::getCPUState() const {
+    return state;
+}
+
 void CPU::reset() {
     state.PC = reset_vector;
     state.AC = 0x00;
@@ -65,12 +69,7 @@ void CPU::execute(int64_t max_cycles) {
         if(signals[NMI]) nmi();
         if(signals[RESET]) reset();
 
-        if(state.PC == 0x336d) {
-            printf("Reached end PC successfully with %d cycles (all tests succeeded!)\n", cycles);
-            break;
-        }
-
-        if(prev_pc == state.PC) printf("ERROR!!!!");
+        if(prev_pc == state.PC) break; // stop execution when stuck
         prev_pc = state.PC;
 
         // get opcode

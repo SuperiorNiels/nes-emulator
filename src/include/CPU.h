@@ -48,6 +48,7 @@ public:
     void setCPUSignal(cpu_signals signal, bool state);
 
     void setResetVector(uint16_t vector);
+    cpu_state getCPUState() const;
 
 private:
     bool flags[8];

@@ -35,7 +35,7 @@ void CPU::execute(int32_t& cycles) {
         if(state.PC == prev_pc) debug = true;
         prev_pc = state.PC;
         // debug specific mem address
-        if(state.PC == 0x0f32) debug = true;
+        //if(state.PC == 0x0f32) debug = true;
         // debug when specific mem address changes
         curr_mem = mem->read(cycles, debug_mem_addr);
         //if(curr_mem != prev_mem) debug = true;
@@ -49,7 +49,7 @@ void CPU::execute(int32_t& cycles) {
             //printf("Mem[%4x]: %2x\n", mem_loc, mem->read(cycles, mem_loc));
             //debugPrintStack(cycles);
             printf("Current PC: %2x, Opcode: %s (%2X)\n", state.PC, instructions[opcode].name.c_str(), opcode);
-            printf("[%4x]: %2x\n", 0x0206, mem->read(cycles, 0x0206));
+            //printf("[%4x]: %2x\n", 0x0206, mem->read(cycles, 0x0206));
             //printStatus();
             //printFlags();
         }

@@ -47,6 +47,8 @@ public:
     bool const readCPUSignal(cpu_signals signal);
     void setCPUSignal(cpu_signals signal, bool state);
 
+    void setResetVector(uint16_t vector);
+
 private:
     bool flags[8];
     cpu_state state{};
@@ -55,10 +57,12 @@ private:
     
     int64_t cycles = 0;
     std::map<const cpu_signals, bool> signals;
+    uint16_t reset_vector = 0xFFFC;
 
     void nmi();
     void irq();
     void reset();
+    void interrupt(uint16_t vector);
     void executeInstruction(int64_t& cycles, const instruction& instr);
     void update_CV_flags(uint8_t param, int16_t result);
     void update_ZN_flags(uint8_t param);
@@ -66,7 +70,7 @@ private:
     uint8_t pop_stack(int64_t& cycles);
 
     // Helper functions
-    uint8_t convertFlagsToByte(bool brk_flag);
+    uint8_t convertFlagsToByte();
     void loadFlagsFromByte(uint8_t byte);
     void printStatus();
     void printFlags();

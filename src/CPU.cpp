@@ -11,27 +11,38 @@ CPU::CPU() {
 }
 
 void CPU::reset() {
-    state.PC = 0x0400;
+    state.PC = reset_vector;
     state.AC = 0x00;
     state.X = 0x00;
     state.Y = 0x00;
     state.SP = 0xFF;
-
     memset(&flags, 0b0, 8);
-    flags[4] = true;
     flags[5] = true;
-    printf("RESET\n");
     signals[RESET] = false;
 }
 
+void CPU::setResetVector(uint16_t vector) {
+    reset_vector = vector;
+}
+
 void CPU::irq() {
-    printf("IRQ\n");
+    interrupt(0xFFFE);
     signals[IRQ] = false;
 }
 
 void CPU::nmi() {
-    printf("NMI\n");
+    interrupt(0xFFFA);
     signals[NMI] = false;
+}
+
+void CPU::interrupt(uint16_t vector) {
+    uint16_t result;
+    result = state.PC + 2;
+    push_stack(cycles, result >> 8);
+    push_stack(cycles, result);
+    push_stack(cycles, convertFlagsToByte());
+    state.PC = mem->read16(cycles, vector);
+    flags[I] = true;
 }
 
 bool const CPU::readCPUSignal(cpu_signals signal) { 
@@ -47,16 +58,20 @@ void CPU::attachMemeory(Memory* memory) {
 }
 
 void CPU::execute(int64_t max_cycles) {
+    uint16_t prev_pc = 0;
     while(cycles <= max_cycles) {
+        // Check CPU flags
+        if(signals[IRQ]) irq();
+        if(signals[NMI]) nmi();
+        if(signals[RESET]) reset();
+
         if(state.PC == 0x336d) {
             printf("Reached end PC successfully with %d cycles (all tests succeeded!)\n", cycles);
             break;
         }
 
-        // Check CPU flags
-        if(signals[IRQ]) irq();
-        if(signals[NMI]) nmi();
-        if(signals[RESET]) reset();
+        if(prev_pc == state.PC) printf("ERROR!!!!");
+        prev_pc = state.PC;
 
         // get opcode
         uint8_t opcode = mem->read(cycles, state.PC);
@@ -86,10 +101,10 @@ uint8_t CPU::pop_stack(int64_t& cycles) {
     return mem->read(cycles, STACK_LOCATION + state.SP);
 }
 
-uint8_t CPU::convertFlagsToByte(bool brk_flag) {
+uint8_t CPU::convertFlagsToByte() {
     uint8_t res = 0;
     for(uint8_t i = 0; i < 8; i++) {
-        if(i == 4 && brk_flag) res |= (1u << i); 
+        if(i == 4) res |= (1u << i); 
         else if(i == 5) res |= (1u << i);
         else if(flags[i]) res |= (1u << i);
     }
@@ -185,12 +200,8 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             if(!flags[N]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
         case BRK:
-            result = state.PC + instr.bytes + 1;
-            push_stack(cycles, result >> 8);
-            push_stack(cycles, result);
-            push_stack(cycles, convertFlagsToByte(true));
-            state.PC = mem->read16(cycles, 0xFFFE);
             flags[B] = true;
+            interrupt(0xFFFE);
             flags[I] = true;
             return;
         case BVC:
@@ -294,7 +305,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             push_stack(cycles, state.AC);
             break;
         case PHP:
-            push_stack(cycles, convertFlagsToByte(true));
+            push_stack(cycles, convertFlagsToByte());
             break;
         case PLA:
             state.AC = pop_stack(cycles);

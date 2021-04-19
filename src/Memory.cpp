@@ -70,7 +70,7 @@ uint16_t Memory::calc_addr(int32_t& cycles, addr_mode mode, cpu_state state) {
 
 uint8_t Memory::read(int32_t& cycles,uint16_t addr) {
     uint8_t ppu_register;
-    cycles--; // alyways use 1 cycle for reading
+    cycles++; // alyways use 1 cycle for reading
     /*switch(addr) {
         case 0 ... 0x07FF: return mem[addr];        // 2kB internal RAM
         case 0x0800 ... 0x0FFF: return mem[addr - 0x0800];   // mirror of RAM
@@ -93,13 +93,13 @@ uint8_t Memory::read(int32_t& cycles,uint16_t addr) {
 }
 
 uint16_t Memory::read16(int32_t& cycles, uint16_t addr) {
-    cycles--;
-    cycles--;
+    cycles++;
+    cycles++;
     return (mem[addr] | (mem[addr + 1] << 8));
 }
 
 void Memory::write(int32_t& cycles, uint16_t addr, uint8_t data) {
-    cycles--;
+    cycles++;
     mem[addr] = data;
 }
 

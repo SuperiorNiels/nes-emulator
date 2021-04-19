@@ -11,9 +11,8 @@ int main(int argc, char* args[])
     Console c;
     c.cpu.reset();
     c.loadROM("../6502_samples/6502_functional_test.bin");
-    int32_t cycles = 1000000;
+    int32_t cycles = 0;
     c.cpu.execute(cycles);
-
     std::cout << "Ran for " << cycles << " cycles." << std::endl;
     
     return 0;

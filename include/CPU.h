@@ -18,6 +18,8 @@ typedef enum {
     N = 7, // Negative
 } status_flags;
 
+const char flags_chr[8] = {'C', 'Z', 'I', 'D', 'B', ' ', 'V', 'N'}; 
+
 typedef struct {
     uint16_t PC; // program counter
     uint8_t  AC; // accumulator
@@ -31,7 +33,7 @@ public:
     CPU();
 
     void attachMemeory(Memory* memory);
-    void execute(int32_t& cycles);
+    void execute(int32_t &cycles);
     void reset();
 private:
     cpu_state state{};

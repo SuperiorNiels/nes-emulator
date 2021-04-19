@@ -23,35 +23,26 @@ void CPU::attachMemeory(Memory* memory) {
     CPU::mem = memory;
 }
 
-void CPU::execute(int32_t& cycles) {
-    bool debug = false;
+void CPU::execute(int32_t &cycles) {
+    bool debug = true;
     uint16_t prev_pc = 0;
-    uint16_t debug_mem_addr = 0x0206;
-    uint8_t prev_mem = mem->read(cycles, debug_mem_addr);
-    uint8_t curr_mem;
-    while(cycles > 0) {
+
+    while(cycles < 100000) {
 
         // debug when stuck
         if(state.PC == prev_pc) debug = true;
         prev_pc = state.PC;
         // debug specific mem address
-        //if(state.PC == 0x1b89) debug = true;
-        // debug when specific mem address changes
-        curr_mem = mem->read(cycles, debug_mem_addr);
-        //if(curr_mem != prev_mem) debug = true;
-        prev_mem = curr_mem;
-        
+        if(state.PC == 0x346c) debug = true;
+
         // get opcode
         uint8_t opcode = mem->read(cycles, state.PC);
-        
+
         if(debug) {
-            //uint16_t mem_loc = 0x01fe;
-            //printf("Mem[%4x]: %2x\n", mem_loc, mem->read(cycles, mem_loc));
-            //debugPrintStack(cycles);
-            printf("Current PC: %2x, Opcode: %s (%2X)\n", state.PC, instructions[opcode].name.c_str(), opcode);
-            //printf("[%4x]: %2x\n", 0x0206, mem->read(cycles, 0x0206));
-            //printStatus();
-            //printFlags();
+            printf("Cycle: %5d, current opcode: %s (%2X) ", cycles, instructions[opcode].name.c_str(), opcode);
+            printStatus();
+            printFlags();
+            printf("\n");
         }
 
         // execute instruction
@@ -79,20 +70,61 @@ uint8_t CPU::pop_stack(int32_t& cycles) {
     return mem->read(cycles, STACK_LOCATION + state.SP);
 }
 
+uint8_t CPU::convertFlagsToByte(bool brk_flag) {
+    uint8_t res = 0;
+    for(uint8_t i = 0; i < 8; i++) {
+        if(i == 4 && brk_flag) res |= (1u << i); 
+        else if(i == 5) res |= (1u << i);
+        else if(flags[i]) res |= (1u << i);
+    }
+    return res;
+}
+
+void CPU::loadFlagsFromByte(uint8_t byte) {
+    for(uint8_t i = 0; i < 8; i++) {
+        //if(i != 4 && i != 5)
+            flags[i] = (byte & (1u << i)) != 0;
+    }
+}
+
+void CPU::printStatus() {
+    printf("\t [PC]: %2X [AC]: %2X [SP]: %.2X [X]: %2X [Y]: %2X",
+            state.PC, state.AC, state.SP, state.X, state.Y);
+}
+
+void CPU::printFlags() {
+    printf("\tFlags: ");
+    for(uint8_t i = 0; i < 8; i++) {
+        if(flags[i]) printf("%c", flags_chr[i]);
+        else printf("-");
+    }
+}
+
+void CPU::debugPrintStack(int32_t& cycles) {
+    uint8_t current_sp = state.SP;
+    printf("Current stack (start: %4x)\n", STACK_LOCATION + state.SP);
+    do {
+        uint16_t loc = STACK_LOCATION + current_sp;
+        printf("[%4x]: %2x\n", loc, mem->read(cycles, loc));
+        current_sp++;
+    } while(current_sp != 0);
+}
+
 void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
     uint8_t param;
     uint16_t result, mem_loc;
 
-    mem_loc = mem->calc_addr(cycles, instr.mode, state);
-    param = mem->read(cycles, mem_loc);
+    if(instr.mode != ADDR_IMP) {
+        mem_loc = mem->calc_addr(cycles, instr.mode, state);
+        param = mem->read(cycles, mem_loc);
+    }
 
-    //std::cout << "\nOperation: " <<  instr.name << std::endl;
-    cycles--; // the actual operation cycle
+    cycles ++; // cycle for the execution of the instrcution
     switch(instr.type) {
         case ADC:
-            result = state.AC + param + (uint8_t) flags[C];
+            result = (uint16_t) state.AC + (uint16_t) param + (uint16_t) flags[C];
             update_CV_flags(param, result);
-            update_ZN_flags(state.AC);
+            update_ZN_flags(result);
             state.AC = result;
             break;
         case AND:
@@ -101,13 +133,14 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             break;
         case ASL:
             if(instr.mode == ADDR_ACC) {
-                flags[C] = state.AC & 0x80;
+                flags[C] = state.AC & 0b10000000;
                 state.AC = state.AC << 1u;
                 update_ZN_flags(state.AC);
                 break;
             }
-            flags[C] = param & 0x80;
-            mem->write(cycles, mem_loc, param << 1u);
+            flags[C] = param & 0b10000000;
+            param = param << 1u;
+            mem->write(cycles, mem_loc, param);
             update_ZN_flags(param);
             break;
         case BCC:
@@ -224,13 +257,14 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             break;
         case LSR:
             if(instr.mode == ADDR_ACC) {
-                flags[C] = (state.AC & 0x01) != 0;
+                flags[C] = state.AC & 0b00000001;
                 state.AC = state.AC >> 1u;
                 update_ZN_flags(state.AC);
                 break;
             }
-            flags[C] = (param & 0x01) != 0;
-            mem->write(cycles, mem_loc, param >> 1u);
+            flags[C] = param & 0b00000001;
+            param = param >> 1u;
+            mem->write(cycles, mem_loc, param);
             update_ZN_flags(param);
             break;
         case NOP:
@@ -289,9 +323,9 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             return;
         case SBC:
             param ^= 0xFF;
-            result = state.AC + param + (uint8_t) flags[C];
+            result = (uint16_t) state.AC + (uint16_t) param + (uint16_t) flags[C];
             update_CV_flags(param, result);
-            update_ZN_flags(state.AC);
+            update_ZN_flags(result);
             state.AC = result;
             break;
         case SEC:
@@ -342,48 +376,4 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
     }
 
     state.PC += instr.bytes;
-}
-
-uint8_t CPU::convertFlagsToByte(bool brk_flag) {
-    uint8_t res = 0;
-    for(uint8_t i = 0; i < 8; i++) {
-        if(i == 4 && brk_flag) res |= (1u << i); 
-        else if(i == 5) res |= (1u << i);
-        else if(flags[i]) res |= (1u << i);
-    }
-    return res;
-}
-
-void CPU::loadFlagsFromByte(uint8_t byte) {
-    for(uint8_t i = 0; i < 8; i++) {
-        //if(i != 4 && i != 5)
-            flags[i] = (byte & (1u << i)) != 0;
-    }
-}
-
-void CPU::printStatus() {
-    printf("------ CPU State dump ------\n");
-    printf("PC: %.2X\n", state.PC);
-    printf("AC: %.2X\n", state.AC);
-    printf("SP: %.2X\n", state.SP);
-    printf("X: %.2X\n", state.X);
-    printf("Y: %.2X\n", state.Y);
-}
-
-void CPU::printFlags() {
-    printf("Flags:\n");
-    for(uint8_t i = 0; i < 8; i++) {
-        printf("%d", flags[i]);
-    }
-    printf("\nCZIDB-VN\n");
-}
-
-void CPU::debugPrintStack(int32_t& cycles) {
-    uint8_t current_sp = state.SP;
-    printf("Current stack (start: %4x)\n", STACK_LOCATION + state.SP);
-    do {
-        uint16_t loc = STACK_LOCATION + current_sp;
-        printf("[%4x]: %2x\n", loc, mem->read(cycles, loc));
-        current_sp++;
-    } while(current_sp != 0);
 }

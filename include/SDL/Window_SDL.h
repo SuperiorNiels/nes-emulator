@@ -22,7 +22,7 @@ private:
     void updateScreen();
 
     SDL_Window* window = nullptr;
-    bool fps_toggle = false;
+    SDL_Surface* screenSurface = nullptr;
 };
 
 

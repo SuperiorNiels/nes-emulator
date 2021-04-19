@@ -57,10 +57,10 @@ uint16_t Memory::calc_addr(int32_t& cycles, addr_mode mode, cpu_state state) {
             return mem[temp] | (mem[temp + 1] << 8);
         case ADDR_INX:
             temp = (read16(cycles, state.PC + 1) + state.X) & 0xFF;
-            return mem[temp] | (mem[temp + 1] << 8);
+            return read16(cycles, temp);
         case ADDR_INY:
-            temp = read16(cycles, state.PC + 1);
-            return mem[temp] | (mem[temp + 1] << 8) + state.Y;
+            temp = read16(cycles, read(cycles, state.PC + 1));
+            return temp + state.Y;
         default:
             std::cout << "ERROR: wrong addressing mode" << std::endl;
             break;

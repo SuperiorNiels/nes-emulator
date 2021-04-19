@@ -35,7 +35,7 @@ void CPU::execute(int32_t& cycles) {
         if(state.PC == prev_pc) debug = true;
         prev_pc = state.PC;
         // debug specific mem address
-        //if(state.PC == 0x0f32) debug = true;
+        //if(state.PC == 0x1b89) debug = true;
         // debug when specific mem address changes
         curr_mem = mem->read(cycles, debug_mem_addr);
         //if(curr_mem != prev_mem) debug = true;
@@ -121,9 +121,10 @@ void CPU::executeInstruction(int32_t& cycles, const instruction& instr) {
             break;
         case BIT:
             result = state.AC & param;
-            if(result == 0) flags[Z] = true;
-            flags[V] = (result & (1u << 6)) != 0;
-            flags[N] = (result & (1u << 7)) != 0;
+            flags[Z] = result == 0x00;
+            flags[V] = (param & (1u << 6));
+            flags[N] = (param & (1u << 7));
+            break;
         case BMI:
             if(flags[N]) { state.PC += (int8_t) param + instr.bytes; return; }
             break;
@@ -355,7 +356,7 @@ uint8_t CPU::convertFlagsToByte(bool brk_flag) {
 
 void CPU::loadFlagsFromByte(uint8_t byte) {
     for(uint8_t i = 0; i < 8; i++) {
-        if(i != 4 && i != 5)
+        //if(i != 4 && i != 5)
             flags[i] = (byte & (1u << i)) != 0;
     }
 }

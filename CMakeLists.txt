@@ -6,6 +6,7 @@ project(${PROJECT_NAME})
 set(SRC_PATH "${CMAKE_SOURCE_DIR}/src")
 set(MAIN_SRC "${CMAKE_SOURCE_DIR}/main.cpp")
 set(TEST_PATH "${CMAKE_SOURCE_DIR}/tests")
+set(IMGUI_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 set(CMAKE_CXX_STANDARD 14)
 
 # Google GTest
@@ -17,9 +18,12 @@ FetchContent_Declare(
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+enable_testing()
+include(GoogleTest)
+include(FindPkgConfig)
 
 # ---------------------------------- Sources and Libraries ----------------------------------
-# Projec source files
+# Project source files
 include_directories("${SRC_PATH}/include")
 file(GLOB_RECURSE SRC_FILES
      "${SRC_PATH}/**.h"
@@ -27,18 +31,30 @@ file(GLOB_RECURSE SRC_FILES
 )
 
 # Testing source files
-enable_testing()
-include(GoogleTest)
-# Projec source files
 file(GLOB_RECURSE TEST_FILES
      "${TEST_PATH}/**.cpp"
 )
 
-# Add SDL2
-include(FindPkgConfig)
+# SDL2
 pkg_search_module(SDL2 REQUIRED sdl2)
-find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
+
+# opengl
+find_package(OpenGL REQUIRED)
+pkg_search_module(GLEW REQUIRED glew)
+include_directories(${OPENGL_INCLUDE_DIRS})
+include_directories(${GLEW_INCLUDE_DIRS})
+
+# imgui
+set(IMGUI_BACKEND_FILES 
+     "${IMGUI_PATH}/backends/imgui_impl_sdl.h"
+     "${IMGUI_PATH}/backends/imgui_impl_sdl.cpp"
+     "${IMGUI_PATH}/backends/imgui_impl_opengl3.h"
+     "${IMGUI_PATH}/backends/imgui_impl_opengl3.cpp"
+)
+file(GLOB IMGUI_FILES "${IMGUI_PATH}/*.cpp" "${IMGUI_PATH}/*.h")
+include_directories(${IMGUI_PATH})
+include_directories("${IMGUI_PATH}/backends")
 
 # ---------------------------------- Build Targets ----------------------------------
 
@@ -54,3 +70,14 @@ target_link_libraries(${PROJECT_NAME} "${PROJECT_NAME}_lib")
 add_executable("${PROJECT_NAME}_test" ${TEST_FILES})
 target_link_libraries("${PROJECT_NAME}_test" "${PROJECT_NAME}_lib" gtest_main)
 gtest_discover_tests("${PROJECT_NAME}_test")
+
+# imgui lib
+add_library("${PROJECT_NAME}_imgui_lib" ${IMGUI_FILES} ${IMGUI_BACKEND_FILES})
+target_link_libraries("${PROJECT_NAME}_imgui_lib" ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_options("${PROJECT_NAME}_imgui_lib" PUBLIC "-limm32")
+# Workaround, mingw cant seem to find and link to imm32 library 
+target_compile_definitions("${PROJECT_NAME}_imgui_lib" PUBLIC IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
+
+# imgui example
+add_executable("${PROJECT_NAME}_imgui_example" "./lib/imgui/examples/example_sdl_opengl3/main.cpp")
+target_link_libraries("${PROJECT_NAME}_imgui_example" "${PROJECT_NAME}_imgui_lib")

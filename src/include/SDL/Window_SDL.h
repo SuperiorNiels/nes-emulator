@@ -33,6 +33,7 @@ private:
     bool executeRom = false;
     bool fastExecute = false;
     bool insaneFast = false;
+    bool followPC = false;
     void cb_loadRom();
 
     ImGuiIO io;

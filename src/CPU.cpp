@@ -31,6 +31,7 @@ void CPU::reset() {
     memset(&flags, 0b0, 8);
     flags[5] = true;
     signals[RESET] = false;
+    cycles += 7; // fake cycle count
 }
 
 void CPU::setResetVector(uint16_t vector) {
@@ -73,10 +74,10 @@ void CPU::execute(int64_t max_cycles) {
     uint16_t prev_pc = 0;
     uint64_t start_cycles = cycles;
     while(cycles <= start_cycles + max_cycles) {
-        // Check CPU flags
-        if(signals[IRQ]) { irq(); break; }
-        if(signals[NMI]) { nmi(); break; }
-        if(signals[RESET]) { reset(); break; }
+        // Check CPU signals
+        if(signals[IRQ]) { irq(); continue; }
+        if(signals[NMI]) { nmi(); continue; }
+        if(signals[RESET]) { reset(); continue; }
 
         if(prev_pc == state.PC) break; // stop execution when stuck
         prev_pc = state.PC;

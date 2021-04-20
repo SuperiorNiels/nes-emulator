@@ -39,9 +39,9 @@ bool Window_SDL::init() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Init memory viewer window
-    mem_edit.ReadOnly = true;
+    //mem_edit.ReadOnly = true;
     //mem_edit.OptShowDataPreview = true;
-    mem_edit.OptShowOptions = false;
+    //mem_edit.OptShowOptions = false;
     return true;
 }
 
@@ -114,25 +114,35 @@ void Window_SDL::updateScreen() {
     
     // Main content
     ImGui::BeginChild("Content", ImVec2(0, -(ImGui::GetTextLineHeightWithSpacing() + 2 + style.ItemSpacing.y)), false, 0);
+        // 6502 CPU state
+        auto cpu_state = console->cpu.getCPUState();
+        auto cpu_flags = console->cpu.getCPUFlags();
+        auto cpu_cycles = console->cpu.getCPUExecutedCycles();
+
         // Memory viewer
         float footer_height = style.ItemSpacing.y + 10 + ImGui::GetTextLineHeightWithSpacing() * 3;
         ImGui::BeginChild("mem_view", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
         mem_edit.DrawContents((void*) console->mem.getMemoryStartPointer(), MAX_MEM + 1);
+        if(followPC) {
+            mem_edit.GotoAddr = cpu_state.PC;
+            mem_edit.DataEditingTakeFocus = false;
+        }
         ImGui::EndChild();
         
         ImGui::Separator();
 
-        // 6502 CPU state
-        auto state = console->cpu.getCPUState();
-        auto flags = console->cpu.getCPUFlags();
-        auto cpu_cycles = console->cpu.getCPUExecutedCycles();
-        // TODO: add cpu flags to gui
-        ImGui::Text("[PC]: %4X [AC]: %2X [X]: %2X [Y]: %2X [SP]: %4X", state.PC, state.AC, state.X, state.Y, state.SP);
-        ImGui::Text("Flags: ----- -- \t Cycles: %ld", cpu_cycles);
+        ImGui::Text("[PC]: %4X [AC]: %2X [X]: %2X [Y]: %2X [SP]: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);
+        ImGui::Text("Flags: ");
+        for(uint8_t i = 0; i < 8; i++) {
+            if(cpu_flags[i]) { ImGui::SameLine(); ImGui::Text("%c", flags_chr[i]); }
+            else { ImGui::SameLine(); ImGui::Text("-"); }
+        }
+        ImGui::SameLine(); ImGui::Text("\t Cycles: %ld", cpu_cycles);
         if (ImGui::BeginTable("split", 6)) {
             ImGui::TableNextColumn(); ImGui::Checkbox("CPU Execute", &executeRom);
             ImGui::TableNextColumn(); ImGui::Checkbox("Fast Execute", &fastExecute);
             ImGui::TableNextColumn(); ImGui::Checkbox("Insane Fast", &insaneFast);
+            ImGui::TableNextColumn(); ImGui::Checkbox("Follow PC", &followPC);
             ImGui::EndTable();
         }
     ImGui::EndChild();

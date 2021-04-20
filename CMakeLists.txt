@@ -62,10 +62,6 @@ include_directories("${IMGUI_PATH}/backends")
 add_library("${PROJECT_NAME}_lib" ${SRC_FILES})
 target_link_libraries("${PROJECT_NAME}_lib" ${SDL2_LIBRARIES})
 
-# Emulator EXE
-add_executable(${PROJECT_NAME} ${MAIN_SRC})
-target_link_libraries(${PROJECT_NAME} "${PROJECT_NAME}_lib")
-
 # GTest EXE
 add_executable("${PROJECT_NAME}_test" ${TEST_FILES})
 target_link_libraries("${PROJECT_NAME}_test" "${PROJECT_NAME}_lib" gtest_main)
@@ -81,3 +77,7 @@ target_compile_definitions("${PROJECT_NAME}_imgui_lib" PUBLIC IMGUI_DISABLE_WIN3
 # imgui example
 add_executable("${PROJECT_NAME}_imgui_example" "./lib/imgui/examples/example_sdl_opengl3/main.cpp")
 target_link_libraries("${PROJECT_NAME}_imgui_example" "${PROJECT_NAME}_imgui_lib")
+
+# Emulator EXE
+add_executable(${PROJECT_NAME} ${MAIN_SRC})
+target_link_libraries(${PROJECT_NAME} "${PROJECT_NAME}_lib" "${PROJECT_NAME}_imgui_lib")

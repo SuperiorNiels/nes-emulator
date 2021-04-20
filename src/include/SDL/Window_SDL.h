@@ -1,8 +1,14 @@
 #ifndef NES_WINDOWSDL_H
 #define NES_WINDOWSDL_H
 
+#include <stdio.h>
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <GL/glew.h>   
+
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 
 #include "Window.h"
 
@@ -22,7 +28,8 @@ private:
     void updateScreen();
 
     SDL_Window* window = nullptr;
-    SDL_Surface* screenSurface = nullptr;
+    SDL_GLContext* gl_context = nullptr;
+    ImGuiIO io;
 };
 
 

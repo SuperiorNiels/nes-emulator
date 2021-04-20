@@ -1,7 +1,7 @@
 #include "Memory.h"
 
-Memory::Memory() {
-    reset();
+uint8_t* Memory::getMemoryStartPointer() {
+    return mem;
 }
 
 void Memory::loadBinary(const char *filename) {

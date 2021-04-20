@@ -9,6 +9,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_memory_editor/imgui_memory_editor.h"
 
 #include "Window.h"
 
@@ -27,9 +28,18 @@ private:
     void updateEvents();
     void updateScreen();
 
-    SDL_Window* window = nullptr;
-    SDL_GLContext* gl_context = nullptr;
+    // Menu actions
+    bool loadRom = false;
+    bool executeRom = false;
+    bool fastExecute = false;
+    bool insaneFast = false;
+    void cb_loadRom();
+
     ImGuiIO io;
+    SDL_GLContext gl_context;
+    SDL_Window* window = nullptr;
+
+    MemoryEditor mem_edit;
 };
 
 

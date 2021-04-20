@@ -49,6 +49,8 @@ public:
 
     void setResetVector(uint16_t vector);
     cpu_state getCPUState() const;
+    bool* getCPUFlags() const;
+    int64_t getCPUExecutedCycles() const;
 
 private:
     bool flags[8];

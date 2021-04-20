@@ -14,6 +14,14 @@ cpu_state CPU::getCPUState() const {
     return state;
 }
 
+bool* CPU::getCPUFlags() const {
+    return (bool*) flags;
+}
+
+int64_t CPU::getCPUExecutedCycles() const {
+    return cycles;
+}
+
 void CPU::reset() {
     state.PC = reset_vector;
     state.AC = 0x00;
@@ -63,11 +71,12 @@ void CPU::attachMemeory(Memory* memory) {
 
 void CPU::execute(int64_t max_cycles) {
     uint16_t prev_pc = 0;
-    while(cycles <= max_cycles) {
+    uint64_t start_cycles = cycles;
+    while(cycles <= start_cycles + max_cycles) {
         // Check CPU flags
-        if(signals[IRQ]) irq();
-        if(signals[NMI]) nmi();
-        if(signals[RESET]) reset();
+        if(signals[IRQ]) { irq(); break; }
+        if(signals[NMI]) { nmi(); break; }
+        if(signals[RESET]) { reset(); break; }
 
         if(prev_pc == state.PC) break; // stop execution when stuck
         prev_pc = state.PC;

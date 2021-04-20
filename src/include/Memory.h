@@ -12,7 +12,7 @@
 
 class Memory {
 public:
-    Memory();
+    Memory() {};
 
     void reset();
     void loadBinary(const char* filename);
@@ -22,6 +22,7 @@ public:
     uint16_t read16(int64_t& cycles, uint16_t addr);
     void write(int64_t& cycles, uint16_t addr, uint8_t data);
 
+    uint8_t* getMemoryStartPointer();
 private:
     uint8_t mem[MAX_MEM]{}; // 16K
 

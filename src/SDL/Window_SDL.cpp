@@ -18,10 +18,10 @@ bool Window_SDL::init() {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
+    gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    //SDL_GL_SetSwapInterval(1); // Enable vsync
+    SDL_GL_SetSwapInterval(1); // Enable vsync
 
     // Init glew
     if (glewInit() != GLEW_OK) {
@@ -38,6 +38,10 @@ bool Window_SDL::init() {
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    // Init memory viewer window
+    mem_edit.ReadOnly = true;
+    //mem_edit.OptShowDataPreview = true;
+    mem_edit.OptShowOptions = false;
     return true;
 }
 
@@ -58,6 +62,11 @@ void Window_SDL::update() {
     //SDL_Delay(1000 / fps);
 }
 
+void Window_SDL::cb_loadRom() {
+    printf("Loading ROM ...\n");
+    loadRom = false;    
+}
+
 void Window_SDL::updateEvents() {
     SDL_Event event;
     bool keydown = false;
@@ -75,29 +84,70 @@ void Window_SDL::updateScreen() {
     ImGui_ImplSDL2_NewFrame(window);
     ImGui::NewFrame();
 
-    static float f = 0.0f;
-    static int counter = 0;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
 
-    ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+    ImGuiWindowFlags wflags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
+    ImGui::Begin("NES Memory", (bool*) true, wflags);
 
-    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+    if(loadRom) cb_loadRom();
 
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+    if(executeRom) {
+        if(insaneFast) console->cpu.execute(10000);
+        if(fastExecute) console->cpu.execute(1000); 
+        else console->cpu.execute(1); // execute 1 instruction
+    }
 
-    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-        counter++;
-    ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
+    // Menu Bar
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("Menu"))
+        {
+            ImGui::MenuItem("Load ROM", NULL, &loadRom);
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
 
+    ImGuiStyle& style = ImGui::GetStyle();
+    
+    // Main content
+    ImGui::BeginChild("Content", ImVec2(0, -(ImGui::GetTextLineHeightWithSpacing() + 2 + style.ItemSpacing.y)), false, 0);
+        // Memory viewer
+        float footer_height = style.ItemSpacing.y + 10 + ImGui::GetTextLineHeightWithSpacing() * 3;
+        ImGui::BeginChild("mem_view", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+        mem_edit.DrawContents((void*) console->mem.getMemoryStartPointer(), MAX_MEM + 1);
+        ImGui::EndChild();
+        
+        ImGui::Separator();
+
+        // 6502 CPU state
+        auto state = console->cpu.getCPUState();
+        auto flags = console->cpu.getCPUFlags();
+        auto cpu_cycles = console->cpu.getCPUExecutedCycles();
+        // TODO: add cpu flags to gui
+        ImGui::Text("[PC]: %4X [AC]: %2X [X]: %2X [Y]: %2X [SP]: %4X", state.PC, state.AC, state.X, state.Y, state.SP);
+        ImGui::Text("Flags: ----- -- \t Cycles: %ld", cpu_cycles);
+        if (ImGui::BeginTable("split", 6)) {
+            ImGui::TableNextColumn(); ImGui::Checkbox("CPU Execute", &executeRom);
+            ImGui::TableNextColumn(); ImGui::Checkbox("Fast Execute", &fastExecute);
+            ImGui::TableNextColumn(); ImGui::Checkbox("Insane Fast", &insaneFast);
+            ImGui::EndTable();
+        }
+    ImGui::EndChild();
+
+    ImGui::BeginChild("performance", ImVec2(0, 0));
+    ImGui::Separator();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::EndChild();
+    
     ImGui::End();
 
     // Rendering
     ImGui::Render();
     glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+    glClearColor(0, 0, 0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(window);

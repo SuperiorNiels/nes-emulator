@@ -17,7 +17,7 @@ public:
     void setFPS(int fps) { this->fps = fps; };
     int getFPS() const { return fps; };
 
-    void attachConsole(const Console* console) { this->console = console; }
+    void attachConsole(Console* console) { this->console = console; }
 
     virtual ~Window() { delete title; };
 
@@ -29,7 +29,7 @@ protected:
     int fps = 60;
 
     // Console vars
-    const Console* console = nullptr;
+    Console* console = nullptr;
     const char* glsl_version;
 };
 

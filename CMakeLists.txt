@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.16)
 
 # Config
 set(PROJECT_NAME nes_emulator)
@@ -23,12 +23,13 @@ include(GoogleTest)
 include(FindPkgConfig)
 
 # ---------------------------------- Sources and Libraries ----------------------------------
+
 # Project source files
-include_directories("${SRC_PATH}/include")
 file(GLOB_RECURSE SRC_FILES
      "${SRC_PATH}/**.h"
      "${SRC_PATH}/**.cpp"
 )
+include_directories("${SRC_PATH}/include")
 
 # Testing source files
 file(GLOB_RECURSE TEST_FILES
@@ -70,7 +71,7 @@ gtest_discover_tests("${PROJECT_NAME}_test")
 # imgui lib
 add_library("${PROJECT_NAME}_imgui_lib" ${IMGUI_FILES} ${IMGUI_BACKEND_FILES})
 target_link_libraries("${PROJECT_NAME}_imgui_lib" ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
-target_link_options("${PROJECT_NAME}_imgui_lib" PUBLIC "-limm32")
+# target_link_options("${PROJECT_NAME}_imgui_lib" PUBLIC "-limm32")
 # Workaround, mingw cant seem to find and link to imm32 library 
 target_compile_definitions("${PROJECT_NAME}_imgui_lib" PUBLIC IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
 

@@ -136,7 +136,7 @@ void CPU::printFullState() {
     printf("Opcode: %s (%2X) ", instructions[opcode].name.c_str(), opcode);
     printStatus();
     printFlags();
-    printf("\tCycles: %d", cycles);
+    printf("\tCycles: %ld", cycles);
     printf("\n");
 }
 

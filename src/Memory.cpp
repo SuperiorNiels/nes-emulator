@@ -14,7 +14,8 @@ void Memory::loadBinary(const char *filename) {
 
     if(size > MAX_MEM + 1) {
         std::cout << "File is to big (max. 64K)." << std::endl;
-        return;
+        //return;
+        size = MAX_MEM + 1;
     }
 
     char buffer[MAX_MEM + 1];

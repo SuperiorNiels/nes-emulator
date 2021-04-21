@@ -105,7 +105,7 @@ void Window_SDL::updateScreen() {
 
     // Load ROM file Dialog
     if(loadRom) {
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".bin", "../");
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".bin,.rom,.nes", "../");
         loadRom = false;
     }  
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {

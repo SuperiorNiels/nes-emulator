@@ -6,6 +6,7 @@ project(${PROJECT_NAME})
 set(SRC_PATH "${CMAKE_SOURCE_DIR}")
 set(APPS_PATH "${CMAKE_SOURCE_DIR}/apps")
 set(TEST_PATH "${CMAKE_SOURCE_DIR}/tests")
+set(ICON_PATH "${CMAKE_SOURCE_DIR}/data/icons")
 set(IMGUI_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 set(IMGUI_CLUB_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_club")
 set(IMGUI_FILE_DIALOG_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_filedialog")
@@ -86,5 +87,5 @@ add_executable("${PROJECT_NAME}_imgui_example" "./lib/imgui/examples/example_sdl
 target_link_libraries("${PROJECT_NAME}_imgui_example" "${PROJECT_NAME}_imgui_lib")
 
 # 6502 emulator EXE
-add_executable("6502_emulator" "${APPS_PATH}/6502_emulator.cpp")
+add_executable("6502_emulator" "${APPS_PATH}/6502_emulator.cpp" "${ICON_PATH}/6502_emulator.o")
 target_link_libraries("6502_emulator" "${PROJECT_NAME}_lib" "${PROJECT_NAME}_imgui_lib")

@@ -8,6 +8,7 @@ set(MAIN_SRC "${CMAKE_SOURCE_DIR}/main.cpp")
 set(TEST_PATH "${CMAKE_SOURCE_DIR}/tests")
 set(IMGUI_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 set(IMGUI_CLUB_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_club")
+set(IMGUI_FILE_DIALOG_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_filedialog")
 set(CMAKE_CXX_STANDARD 14)
 
 # Google GTest
@@ -56,8 +57,10 @@ set(IMGUI_BACKEND_FILES
 )
 file(GLOB IMGUI_FILES "${IMGUI_PATH}/*.cpp" "${IMGUI_PATH}/*.h")
 file(GLOB_RECURSE IMGUI_CLUB_FILES "${IMGUI_CLUB_PATH}/*.cpp" "${IMGUI_CLUB_PATH}/*.h")
+file(GLOB_RECURSE IMGUI_FILE_DIALOG_FILES "${IMGUI_FILE_DIALOG_PATH}/*.cpp" "${IMGUI_FILE_DIALOG_PATH}/*.h")
 include_directories(${IMGUI_PATH})
 include_directories(${IMGUI_CLUB_PATH})
+include_directories(${IMGUI_FILE_DIALOG_PATH})
 include_directories("${IMGUI_PATH}/backends")
 
 # ---------------------------------- Build Targets ----------------------------------
@@ -72,7 +75,7 @@ target_link_libraries("${PROJECT_NAME}_test" "${PROJECT_NAME}_lib" gtest_main)
 gtest_discover_tests("${PROJECT_NAME}_test")
 
 # imgui lib
-add_library("${PROJECT_NAME}_imgui_lib" ${IMGUI_FILES} ${IMGUI_BACKEND_FILES} ${IMGUI_CLUB_FILES})
+add_library("${PROJECT_NAME}_imgui_lib" ${IMGUI_FILES} ${IMGUI_BACKEND_FILES} ${IMGUI_CLUB_FILES} ${IMGUI_FILE_DIALOG_FILES})
 target_link_libraries("${PROJECT_NAME}_imgui_lib" ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 # target_link_options("${PROJECT_NAME}_imgui_lib" PUBLIC "-limm32")
 # Workaround, mingw cant seem to find and link to imm32 library 

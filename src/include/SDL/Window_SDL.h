@@ -10,6 +10,7 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_memory_editor/imgui_memory_editor.h"
+#include "ImGuiFileDialog.h"
 
 #include "Window.h"
 
@@ -34,7 +35,6 @@ private:
     bool fastExecute = false;
     bool insaneFast = false;
     bool followPC = false;
-    void cb_loadRom();
 
     ImGuiIO io;
     SDL_GLContext gl_context;

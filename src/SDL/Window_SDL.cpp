@@ -62,11 +62,6 @@ void Window_SDL::update() {
     //SDL_Delay(1000 / fps);
 }
 
-void Window_SDL::cb_loadRom() {
-    printf("Loading ROM ...\n");
-    loadRom = false;    
-}
-
 void Window_SDL::updateEvents() {
     SDL_Event event;
     bool keydown = false;
@@ -93,8 +88,6 @@ void Window_SDL::updateScreen() {
     ImGuiWindowFlags wflags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("NES Memory", (bool*) true, wflags);
 
-    if(loadRom) cb_loadRom();
-
     if(executeRom) {
         if(insaneFast) console->cpu.execute(10000);
         if(fastExecute) console->cpu.execute(1000); 
@@ -102,14 +95,29 @@ void Window_SDL::updateScreen() {
     }
 
     // Menu Bar
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("Menu"))
-        {
-            ImGui::MenuItem("Load ROM", NULL, &loadRom);
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("Menu")) {
+            ImGui::MenuItem("Load ROM", NULL, &loadRom); 
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
+    }
+
+    // Load ROM file Dialog
+    if(loadRom) {
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".bin", "../");
+        loadRom = false;
+    }  
+    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            const char* filePathName = ImGuiFileDialog::Instance()->GetFilePathName().c_str();
+            const char* filePath = ImGuiFileDialog::Instance()->GetCurrentPath().c_str();
+            console->loadROM(filePathName);
+            console->cpu.setCPUSignal(RESET, true);
+            console->cpu.execute(1);
+        }
+        
+        ImGuiFileDialog::Instance()->Close();
     }
 
     ImGuiStyle& style = ImGui::GetStyle();

@@ -4,3 +4,8 @@
 [submodule "lib/imgui_club"]
 	path = lib/imgui_club
 	url = https://github.com/ocornut/imgui_club.git
+[submodule "lib/imgui_filedialog"]
+	path = lib/imgui_filedialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git
+	branch = Lib_Only
+

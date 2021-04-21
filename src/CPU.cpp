@@ -22,6 +22,12 @@ int64_t CPU::getCPUExecutedCycles() const {
     return cycles;
 }
 
+instruction CPU::getCurrentInstruction() {
+    int64_t tmp;
+    uint8_t opcode = mem->read(tmp, state.PC); 
+    return instructions[opcode];
+}
+
 void CPU::reset() {
     state.PC = reset_vector;
     state.AC = 0x00;
@@ -143,7 +149,7 @@ void CPU::printFlags() {
 void CPU::printFullState() {
     int64_t tmp = 0; // use tmp cycles variable so the used cylces are incremented (not actually part of the prg) 
     uint8_t opcode = mem->read(tmp, state.PC);
-    printf("Opcode: %s (%2X) ", instructions[opcode].name.c_str(), opcode);
+    printf("Opcode: %s (%2X) ", instructions[opcode].name, opcode);
     printStatus();
     printFlags();
     printf("\tCycles: %ld", cycles);

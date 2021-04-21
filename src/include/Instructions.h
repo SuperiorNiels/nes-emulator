@@ -85,7 +85,7 @@ typedef struct {
     instr_type type = ADC;
     uint8_t bytes = 0;
     uint8_t cycles = 0;
-    std::string name{};
+    const char* name;
 } instruction;
 
 inline void initialize_instructions(std::map<uint8_t, instruction>*instructions) {

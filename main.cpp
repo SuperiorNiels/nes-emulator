@@ -8,7 +8,7 @@ const int WINDOW_HEIGHT = 600;
 
 int main(int argc, char* args[])
 {
-    const char* bin_location = "./tests/data/functional_test_no_decimal_ops.bin";
+    const char* bin_location = "../tests/data/functional_test_no_decimal_ops.bin";
 
     Console c;
     c.loadROM(bin_location);

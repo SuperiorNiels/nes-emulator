@@ -46,11 +46,13 @@ public:
     // Signal interactions
     bool const readCPUSignal(cpu_signals signal);
     void setCPUSignal(cpu_signals signal, bool state);
-
     void setResetVector(uint16_t vector);
+
+    // Get CPU information for displaying
     cpu_state getCPUState() const;
     bool* getCPUFlags() const;
     int64_t getCPUExecutedCycles() const;
+    instruction getCurrentInstruction();
 
 private:
     bool flags[8];

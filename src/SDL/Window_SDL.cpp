@@ -118,19 +118,22 @@ void Window_SDL::updateScreen() {
         auto cpu_state = console->cpu.getCPUState();
         auto cpu_flags = console->cpu.getCPUFlags();
         auto cpu_cycles = console->cpu.getCPUExecutedCycles();
+        auto cpu_instruction = console->cpu.getCurrentInstruction();
 
         // Memory viewer
         float footer_height = style.ItemSpacing.y + 10 + ImGui::GetTextLineHeightWithSpacing() * 3;
         ImGui::BeginChild("mem_view", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-        mem_edit.DrawContents((void*) console->mem.getMemoryStartPointer(), MAX_MEM + 1);
         if(followPC) {
             mem_edit.GotoAddr = cpu_state.PC;
             mem_edit.DataEditingTakeFocus = false;
         }
+        mem_edit.DrawContents((void*) console->mem.getMemoryStartPointer(), MAX_MEM + 1);
         ImGui::EndChild();
         
         ImGui::Separator();
 
+        ImGui::Text("Curr. Instr.: %s", cpu_instruction.name);
+        ImGui::SameLine();
         ImGui::Text("[PC]: %4X [AC]: %2X [X]: %2X [Y]: %2X [SP]: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);
         ImGui::Text("Flags: ");
         for(uint8_t i = 0; i < 8; i++) {

@@ -6,7 +6,7 @@ TEST(CPU_TESTS, FullFunctionalTestNoDecimal) {
     CPU cpu;
     Memory mem;
 
-    const char* bin_location = "../data/functional_test_no_decimal_ops.bin";
+    const char* bin_location = "../data/roms/functional_test_no_decimal_ops.bin";
 
     mem.reset();
     mem.loadBinary(bin_location);

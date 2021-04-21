@@ -29,12 +29,11 @@ private:
     void updateEvents();
     void updateScreen();
 
-    // Menu actions
+    // View state varialbes
     bool loadRom = false;
     bool executeRom = false;
-    bool fastExecute = false;
-    bool insaneFast = false;
     bool followPC = false;
+    int cpu_speed = 1;
 
     ImGuiIO io;
     SDL_GLContext gl_context;

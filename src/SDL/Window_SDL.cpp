@@ -88,11 +88,7 @@ void Window_SDL::updateScreen() {
     ImGuiWindowFlags wflags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("NES Memory", (bool*) true, wflags);
 
-    if(executeRom) {
-        if(insaneFast) console->cpu.execute(10000);
-        if(fastExecute) console->cpu.execute(1000); 
-        else console->cpu.execute(1); // execute 1 instruction
-    }
+    if(executeRom) console->cpu.execute(cpu_speed); // execute X instruction
 
     // Menu Bar
     if (ImGui::BeginMenuBar()) {
@@ -110,9 +106,9 @@ void Window_SDL::updateScreen() {
     }  
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
         if (ImGuiFileDialog::Instance()->IsOk()) {
-            const char* filePathName = ImGuiFileDialog::Instance()->GetFilePathName().c_str();
-            const char* filePath = ImGuiFileDialog::Instance()->GetCurrentPath().c_str();
-            console->loadROM(filePathName);
+            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+            printf("%s\n", filePathName.c_str());
+            console->loadROM(filePathName.c_str());
             console->cpu.setCPUSignal(RESET, true);
             console->cpu.execute(1);
         }
@@ -131,7 +127,7 @@ void Window_SDL::updateScreen() {
         auto cpu_instruction = console->cpu.getCurrentInstruction();
 
         // Memory viewer
-        float footer_height = style.ItemSpacing.y + 10 + ImGui::GetTextLineHeightWithSpacing() * 3;
+        float footer_height = style.ItemSpacing.y + 20 + ImGui::GetTextLineHeightWithSpacing() * 4;
         ImGui::BeginChild("mem_view", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
         if(followPC) {
             mem_edit.GotoAddr = cpu_state.PC;
@@ -144,24 +140,43 @@ void Window_SDL::updateScreen() {
 
         ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, console->mem.read(tmp, cpu_state.PC));
         ImGui::SameLine();
-        ImGui::Text("[PC]: %4X [AC]: %2X [X]: %2X [Y]: %2X [SP]: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);
+        ImGui::Text("| PC: %4X | AC: %2X | X: %2X | Y: %2X | SP: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);        
         ImGui::Text("Flags: ");
         for(uint8_t i = 0; i < 8; i++) {
             if(cpu_flags[i]) { ImGui::SameLine(); ImGui::Text("%c", flags_chr[i]); }
             else { ImGui::SameLine(); ImGui::Text("-"); }
         }
         ImGui::SameLine(); ImGui::Text("\t Cycles: %ld", cpu_cycles);
-        if (ImGui::BeginTable("split", 6)) {
+        if (ImGui::BeginTable("checkers", 6)) {
             ImGui::TableNextColumn(); ImGui::Checkbox("CPU Execute", &executeRom);
-            ImGui::TableNextColumn(); ImGui::Checkbox("Fast Execute", &fastExecute);
-            ImGui::TableNextColumn(); ImGui::Checkbox("Insane Fast", &insaneFast);
+            ImGui::TableNextColumn(); ImGui::Text("Speed (cycles):");
+            ImGui::TableNextColumn(); ImGui::SliderInt("", &cpu_speed, 1, 100000);
             ImGui::TableNextColumn(); ImGui::Checkbox("Follow PC", &followPC);
+            ImGui::EndTable();
+        }
+
+        if(ImGui::BeginTable("bottons", 6)) {
+            ImGui::TableNextColumn(); 
+            if(ImGui::Button("Run Step")) {
+                console->cpu.execute(1);
+            }
+            ImGui::TableNextColumn(); 
+            char run_cycles[16];
+            ImGui::Text("Run Cycles: ");
+            ImGui::TableNextColumn(); 
+            memset(run_cycles, 0, sizeof(run_cycles));
+            if (ImGui::InputText("##cycles", run_cycles, sizeof(run_cycles), ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                int64_t _cycles = 0;
+                if (sscanf(run_cycles, "%d", &_cycles) == 1) {
+                    console->cpu.execute(_cycles);
+                }
+            }
             ImGui::TableNextColumn(); 
             char reset_vector_buf[4];
             ImGui::Text("CPU reset vector: ");
             ImGui::TableNextColumn(); 
-            sprintf(reset_vector_buf, "%4X", cpu_state.PC); 
-            if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+            sprintf(reset_vector_buf, "%X", 0x400); 
+            if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 uint16_t reset_vector;
                 if (sscanf(reset_vector_buf, "%4X", &reset_vector) == 1) {
                     console->cpu.setResetVector(reset_vector);
@@ -170,7 +185,7 @@ void Window_SDL::updateScreen() {
                 }
             }
             ImGui::EndTable();
-        }  
+        }
     ImGui::EndChild();
 
     ImGui::BeginChild("performance", ImVec2(0, 0));

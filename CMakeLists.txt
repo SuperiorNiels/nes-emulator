@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.16)
 # Config
 set(PROJECT_NAME nes_emulator)
 project(${PROJECT_NAME})
-set(SRC_PATH "${CMAKE_SOURCE_DIR}/src")
-set(MAIN_SRC "${CMAKE_SOURCE_DIR}/main.cpp")
+set(SRC_PATH "${CMAKE_SOURCE_DIR}")
+set(APPS_PATH "${CMAKE_SOURCE_DIR}/apps")
 set(TEST_PATH "${CMAKE_SOURCE_DIR}/tests")
 set(IMGUI_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 set(IMGUI_CLUB_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_club")
@@ -28,8 +28,8 @@ include(FindPkgConfig)
 
 # Project source files
 file(GLOB_RECURSE SRC_FILES
-     "${SRC_PATH}/**.h"
-     "${SRC_PATH}/**.cpp"
+     "${SRC_PATH}/include/*.h"
+     "${SRC_PATH}/src/*.cpp"
 )
 include_directories("${SRC_PATH}/include")
 
@@ -85,6 +85,6 @@ target_compile_definitions("${PROJECT_NAME}_imgui_lib" PUBLIC IMGUI_DISABLE_WIN3
 add_executable("${PROJECT_NAME}_imgui_example" "./lib/imgui/examples/example_sdl_opengl3/main.cpp")
 target_link_libraries("${PROJECT_NAME}_imgui_example" "${PROJECT_NAME}_imgui_lib")
 
-# Emulator EXE
-add_executable(${PROJECT_NAME} ${MAIN_SRC})
-target_link_libraries(${PROJECT_NAME} "${PROJECT_NAME}_lib" "${PROJECT_NAME}_imgui_lib")
+# 6502 emulator EXE
+add_executable("6502_emulator" "${APPS_PATH}/6502_emulator.cpp")
+target_link_libraries("6502_emulator" "${PROJECT_NAME}_lib" "${PROJECT_NAME}_imgui_lib")

@@ -156,8 +156,21 @@ void Window_SDL::updateScreen() {
             ImGui::TableNextColumn(); ImGui::Checkbox("Fast Execute", &fastExecute);
             ImGui::TableNextColumn(); ImGui::Checkbox("Insane Fast", &insaneFast);
             ImGui::TableNextColumn(); ImGui::Checkbox("Follow PC", &followPC);
+            ImGui::TableNextColumn(); 
+            char reset_vector_buf[4];
+            ImGui::Text("CPU reset vector: ");
+            ImGui::TableNextColumn(); 
+            sprintf(reset_vector_buf, "%4X", cpu_state.PC); 
+            if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                uint16_t reset_vector;
+                if (sscanf(reset_vector_buf, "%4X", &reset_vector) == 1) {
+                    console->cpu.setResetVector(reset_vector);
+                    console->cpu.setCPUSignal(RESET, true);
+                    console->cpu.execute(1);
+                }
+            }
             ImGui::EndTable();
-        }
+        }  
     ImGui::EndChild();
 
     ImGui::BeginChild("performance", ImVec2(0, 0));

@@ -85,15 +85,15 @@ void CPU::execute(int64_t max_cycles) {
         if(signals[NMI]) { nmi(); continue; }
         if(signals[RESET]) { reset(); continue; }
 
-        if(prev_pc == state.PC) break; // stop execution when stuck
-        prev_pc = state.PC;
-
         // get opcode
         uint8_t opcode = mem->read(cycles, state.PC);
 
         // execute instruction
         if(instructions.find(opcode) != instructions.end()) executeInstruction(cycles, instructions[opcode]);
         else printf("Opcode %2X not found.\n", opcode);
+
+        if(prev_pc == state.PC) break; // stop execution when stuck
+        prev_pc = state.PC;
     }
 }
 

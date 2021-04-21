@@ -5,27 +5,27 @@ uint8_t* Memory::getMemoryStartPointer() {
 }
 
 void Memory::loadBinary(const char *filename) {
-    std::cout << "Loading binary program: " << filename << std::endl;
+    DEBUG("Loading binary program: %s\n", filename);
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    std::cout << "File size: " << size << std::endl;
+    DEBUG("File size: %ld\n", size);
 
     if(size > MAX_MEM + 1) {
-        std::cout << "File is to big (max. 64K)." << std::endl;
+        DEBUG("File is to big (max. 64K).\n");
         //return;
         size = MAX_MEM + 1;
     }
 
     char buffer[MAX_MEM + 1];
     if(!file.read(buffer, size)) {
-        std::cout << "Something went wrong while reading file" << std::endl;
+        DEBUG("Something went wrong while reading file.\n");
         file.close();
         return;
     }
 
-    std::cout << "File loaded." << std::endl;
+    DEBUG("File loaded.\n");
     memcpy(mem, buffer, MAX_MEM + 1);
     file.close();
 }
@@ -63,7 +63,7 @@ uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, cpu_state state) {
             temp = read16(cycles, read(cycles, state.PC + 1));
             return temp + state.Y;
         default:
-            std::cout << "ERROR: wrong addressing mode" << std::endl;
+            DEBUG("ERROR: unkown addressing mode.\n");;
             break;
     }
     return 0x0000;

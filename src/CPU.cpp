@@ -90,7 +90,7 @@ void CPU::execute(int64_t max_cycles) {
 
         // execute instruction
         if(instructions.find(opcode) != instructions.end()) executeInstruction(cycles, instructions[opcode]);
-        else printf("Opcode %2X not found.\n", opcode);
+        else DEBUG("Opcode %2X not found.\n", opcode);
 
         if(prev_pc == state.PC) break; // stop execution when stuck
         prev_pc = state.PC;
@@ -134,26 +134,26 @@ void CPU::loadFlagsFromByte(uint8_t byte) {
 }
 
 void CPU::printStatus() {
-    printf("\t[PC]: %4X [AC]: %2X [SP]: %4X [X]: %2X [Y]: %2X",
+    DEBUG("\t[PC]: %4X [AC]: %2X [SP]: %4X [X]: %2X [Y]: %2X",
             state.PC, state.AC, state.SP, state.X, state.Y);
 }
 
 void CPU::printFlags() {
-    printf("\tFlags: ");
+    DEBUG("\tFlags: ");
     for(uint8_t i = 0; i < 8; i++) {
-        if(flags[i]) printf("%c", flags_chr[i]);
-        else printf("-");
+        if(flags[i]) DEBUG("%c", flags_chr[i]);
+        else DEBUG("-");
     }
 }
 
 void CPU::printFullState() {
     int64_t tmp = 0; // use tmp cycles variable so the used cylces are incremented (not actually part of the prg) 
     uint8_t opcode = mem->read(tmp, state.PC);
-    printf("Opcode: %s (%2X) ", instructions[opcode].name, opcode);
+    DEBUG("Opcode: %s (%2X) ", instructions[opcode].name, opcode);
     printStatus();
     printFlags();
-    printf("\tCycles: %ld", cycles);
-    printf("\n");
+    DEBUG("\tCycles: %ld", cycles);
+    DEBUG("\n");
 }
 
 void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
@@ -168,7 +168,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
     cycles ++; // cycle for the execution of the instrcution
     switch(instr.type) {
         case ADC:
-            if(flags[D]) { printf("Decimal mode not supported!"); break; }
+            if(flags[D]) { DEBUG("Decimal mode not supported!"); break; }
             result = (uint16_t) state.AC + (uint16_t) param + (uint16_t) flags[C];
             update_CV_flags(param, result);
             update_ZN_flags(result);
@@ -365,7 +365,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             state.PC = (pop_stack(cycles) | (pop_stack(cycles) << 8)) + 1;
             return;
         case SBC:
-            if(flags[D]) { printf("Decimal mode not supported!"); break; }
+            if(flags[D]) { DEBUG("Decimal mode not supported!"); break; }
             param ^= 0xFF;
             result = (uint16_t) state.AC + (uint16_t) param + (uint16_t) flags[C];
             update_CV_flags(param, result);
@@ -414,7 +414,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             update_ZN_flags(state.AC);
             break;
         default:
-            std::cout << "Unrecognized opcode!" << std::endl;
+            DEBUG("Unrecognized opcode!\n");
             //flags[B] = true;
             break;
     }

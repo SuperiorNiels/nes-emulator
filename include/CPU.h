@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdint-gcc.h>
 #include "Instructions.h"
+#include "Debug.h"
 
 #define STACK_LOCATION 0x0100 // second page resevered for stack
 

@@ -2,7 +2,7 @@
 
 bool Window_SDL::init() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
-        printf("Error: %s\n", SDL_GetError());
+        DEBUG("Error: %s\n", SDL_GetError());
         return false;
     }
 
@@ -107,7 +107,7 @@ void Window_SDL::updateScreen() {
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-            printf("%s\n", filePathName.c_str());
+            DEBUG("Seleceted file: %s\n", filePathName.c_str());
             console->loadROM(filePathName.c_str());
             console->cpu.setCPUSignal(RESET, true);
             console->cpu.execute(1);

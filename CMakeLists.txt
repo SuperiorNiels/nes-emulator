@@ -12,6 +12,10 @@ set(IMGUI_CLUB_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_club")
 set(IMGUI_FILE_DIALOG_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_filedialog")
 set(CMAKE_CXX_STANDARD 14)
 
+if(WIN32) 
+     add_compile_options("-mwindows")
+endif()
+
 # Google GTest
 include(FetchContent)
 FetchContent_Declare(

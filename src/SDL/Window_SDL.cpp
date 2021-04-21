@@ -79,6 +79,8 @@ void Window_SDL::updateEvents() {
 }
 
 void Window_SDL::updateScreen() {
+    int64_t tmp; // tmp variable for reading mememory (without increasing cpu cycles)
+
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame(window);
@@ -132,7 +134,7 @@ void Window_SDL::updateScreen() {
         
         ImGui::Separator();
 
-        ImGui::Text("Curr. Instr.: %s", cpu_instruction.name);
+        ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, console->mem.read(tmp, cpu_state.PC));
         ImGui::SameLine();
         ImGui::Text("[PC]: %4X [AC]: %2X [X]: %2X [Y]: %2X [SP]: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);
         ImGui::Text("Flags: ");

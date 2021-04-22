@@ -12,10 +12,7 @@ env:
 jobs:
   build:
 
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repo
@@ -46,3 +43,9 @@ jobs:
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: ctest -C $BUILD_TYPE
+
+    - name: Add 6502_emulator artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: 6502_emulator
+          path: ${{github.workspace}}/build/6502_emulator

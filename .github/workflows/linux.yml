@@ -44,8 +44,11 @@ jobs:
       shell: bash
       run: ctest -C $BUILD_TYPE
 
+    - name: Install (package)
+      run: make install INSTALL_ROOT=${{github.workspace}}/build/package
+
     - name: Add 6502_emulator artifact
         uses: actions/upload-artifact@v2
         with:
           name: 6502_emulator
-          path: ${{github.workspace}}/build/6502_emulator
+          path: ${{github.workspace}}/build/package/6502_emulator.AppImage

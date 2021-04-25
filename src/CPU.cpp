@@ -35,7 +35,8 @@ void CPU::reset() {
     state.Y = 0x00;
     state.SP = 0xFF;
     memset(&flags, 0b0, 8);
-    flags[5] = true;
+    flags[4] = true; // brk
+    flags[5] = true; // unused (always 1)
     signals[RESET] = false;
     cycles += 7; // fake cycle count
 }

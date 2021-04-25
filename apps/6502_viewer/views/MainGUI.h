@@ -13,12 +13,13 @@ class MainGUI : public View {
 public:
 
     MainGUI() = delete;
-    MainGUI(Console* console);
+    MainGUI(CPU* cpu, Memory* mem);
 
     bool render() override;
 
 private:
-    Console* console = nullptr;
+    CPU* cpu = nullptr; 
+    Memory* mem = nullptr;
 
     // View state varialbes
     MemoryEditor mem_edit;

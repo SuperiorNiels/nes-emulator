@@ -3,7 +3,7 @@
 
 Memory::Memory(const uint32_t mem_size) {
     this->mem_size = mem_size;
-    //this->mem = new uint8_t[(int) mem_size]{};
+    this->mem = new uint8_t[(int) mem_size]{};
 }
 
 uint8_t* Memory::getMemoryStartPointer() {
@@ -14,7 +14,12 @@ const uint32_t Memory::getMemorySize() const {
     return (const uint32_t) mem_size;
 }
 
+bool Memory::memInitialized() {
+    return !(mem_size != 0 && mem != nullptr);
+}
+
 void Memory::loadBinary(const char *filename) {
+    if(!memInitialized()) DEBUG("Memory not initialized yet (load_bin).\n"); return;
     DEBUG("Loading binary program: %s\n", filename);
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
     std::streamsize size = file.tellg();
@@ -40,8 +45,10 @@ void Memory::loadBinary(const char *filename) {
     file.close();
 }
 
-uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& state) {
+uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& state) {    
     uint16_t temp;
+
+    if(!memInitialized()) DEBUG("Memory not initialized yet (calc_addr).\n"); return 0x0000;
 
     switch(mode) {
         case ADDR_IMP:
@@ -80,23 +87,27 @@ uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& sta
 }
 
 uint8_t Memory::read(int64_t& cycles,uint16_t addr) {
+    if(!memInitialized()) DEBUG("Memory not initialized yet (read).\n"); return 0;
     uint8_t ppu_register;
     cycles++; // alyways use 1 cycle for reading
     return mem[addr];
 }
 
 uint16_t Memory::read16(int64_t& cycles, uint16_t addr) {
+    if(!memInitialized()) DEBUG("Memory not initialized yet (read16).\n"); return 0;
     cycles++;
     cycles++;
     return (mem[addr] | (mem[addr + 1] << 8));
 }
 
 void Memory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
+    if(!memInitialized()) DEBUG("Memory not initialized yet (write).\n"); return;
     cycles++;
     mem[addr] = data;
 }
 
 void Memory::reset() {
+    if(!memInitialized()) DEBUG("Memory not initialized yet (reset).\n"); return;
     memset(mem, 0, mem_size);
 }
 

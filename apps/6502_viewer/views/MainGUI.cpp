@@ -1,6 +1,6 @@
 #include "MainGUI.h"
 
-MainGUI::MainGUI(Console* console) : console(console) {
+MainGUI::MainGUI(CPU* cpu, Memory* mem) : cpu(cpu), mem(mem) {
     //mem_edit.ReadOnly = true;
     //mem_edit.OptShowDataPreview = true;
     //mem_edit.OptShowOptions = false;
@@ -16,7 +16,7 @@ bool MainGUI::render() {
     ImGuiWindowFlags wflags = ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("NES Memory", (bool*) true, wflags);
 
-    if(executeRom) console->cpu.execute(cpu_speed); // execute X instruction
+    if(executeRom) cpu->execute(cpu_speed); // execute X instruction
 
     // Menu Bar
     if (ImGui::BeginMenuBar()) {
@@ -36,9 +36,9 @@ bool MainGUI::render() {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
             DEBUG("Seleceted file: %s\n", filePathName.c_str());
-            console->loadROM(filePathName.c_str());
-            console->cpu.setCPUSignal(RESET, true);
-            console->cpu.execute(1);
+            mem->loadBinary(filePathName.c_str());
+            cpu->setCPUSignal(RESET, true);
+            cpu->execute(1);
         }
         
         ImGuiFileDialog::Instance()->Close();
@@ -49,10 +49,10 @@ bool MainGUI::render() {
     // Main content
     ImGui::BeginChild("Content", ImVec2(0, -(ImGui::GetTextLineHeightWithSpacing() + 2 + style.ItemSpacing.y)), false, 0);
         // 6502 CPU state
-        auto cpu_state = console->cpu.getCPUState();
-        auto cpu_flags = console->cpu.getCPUFlags();
-        auto cpu_cycles = console->cpu.getCPUExecutedCycles();
-        auto cpu_instruction = console->cpu.getCurrentInstruction();
+        auto cpu_state = cpu->getCPUState();
+        auto cpu_flags = cpu->getCPUFlags();
+        auto cpu_cycles = cpu->getCPUExecutedCycles();
+        auto cpu_instruction = cpu->getCurrentInstruction();
 
         // Memory viewer
         float footer_height = style.ItemSpacing.y + 20 + ImGui::GetTextLineHeightWithSpacing() * 4;
@@ -61,12 +61,12 @@ bool MainGUI::render() {
             mem_edit.GotoAddr = cpu_state.PC;
             mem_edit.DataEditingTakeFocus = false;
         }
-        mem_edit.DrawContents((void*) console->mem.getMemoryStartPointer(), console->mem.getMemorySize() + 1);
+        mem_edit.DrawContents((void*) mem->getMemoryStartPointer(), mem->getMemorySize() + 1);
         ImGui::EndChild();
         
         ImGui::Separator();
 
-        ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, console->mem.read(tmp, cpu_state.PC));
+        ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, mem->read(tmp, cpu_state.PC));
         ImGui::SameLine();
         ImGui::Text("| PC: %4X | AC: %2X | X: %2X | Y: %2X | SP: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);        
         ImGui::Text("Flags: ");
@@ -86,7 +86,7 @@ bool MainGUI::render() {
         if(ImGui::BeginTable("bottons", 6)) {
             ImGui::TableNextColumn(); 
             if(ImGui::Button("Run Step")) {
-                console->cpu.execute(1);
+                cpu->execute(1);
             }
             ImGui::TableNextColumn(); 
             char run_cycles[16];
@@ -96,7 +96,7 @@ bool MainGUI::render() {
             if (ImGui::InputText("##cycles", run_cycles, sizeof(run_cycles), ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 int64_t _cycles = 0;
                 if (sscanf(run_cycles, "%ld", &_cycles) == 1) {
-                    console->cpu.execute(_cycles);
+                    cpu->execute(_cycles);
                 }
             }
             ImGui::TableNextColumn(); 
@@ -107,9 +107,9 @@ bool MainGUI::render() {
             if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 uint16_t reset_vector;
                 if (sscanf(reset_vector_buf, "%4hX", &reset_vector) == 1) {
-                    console->cpu.setResetVector(reset_vector);
-                    console->cpu.setCPUSignal(RESET, true);
-                    console->cpu.execute(1);
+                    cpu->setResetVector(reset_vector);
+                    cpu->setCPUSignal(RESET, true);
+                    cpu->execute(1);
                 }
             }
             ImGui::EndTable();

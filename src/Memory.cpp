@@ -3,7 +3,7 @@
 
 Memory::Memory(const uint32_t mem_size) {
     this->mem_size = mem_size;
-    //this->mem = uint8_t[mem_size];
+    //this->mem = new uint8_t[(int) mem_size]{};
 }
 
 uint8_t* Memory::getMemoryStartPointer() {
@@ -40,7 +40,7 @@ void Memory::loadBinary(const char *filename) {
     file.close();
 }
 
-uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, cpu_state state) {
+uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& state) {
     uint16_t temp;
 
     switch(mode) {

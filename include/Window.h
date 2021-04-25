@@ -1,7 +1,10 @@
 #ifndef NES_WINDOW_H
 #define NES_WINDOW_H
 
+#include <vector>
+
 #include "Console.h"
+#include "View.h"
 
 class Window {
 public:
@@ -17,7 +20,15 @@ public:
     void setFPS(int fps) { this->fps = fps; };
     int getFPS() const { return fps; };
 
-    void attachConsole(Console* console) { this->console = console; }
+    const int addView(View* view) {
+        views.push_back(view);
+        return views.size();
+    }
+
+    void clearViews() { views.clear(); } // does not delete the views 
+    void removeView(const int view_index) {
+        views.erase(views.begin() + view_index);
+    }
 
     virtual ~Window() { delete title; };
 
@@ -28,9 +39,10 @@ protected:
     bool is_open;
     int fps = 60;
 
-    // Console vars
-    Console* console = nullptr;
     const char* glsl_version;
+
+    // Views to render
+    std::vector<View*> views;
 };
 
 

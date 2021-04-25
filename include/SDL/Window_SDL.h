@@ -6,11 +6,8 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>   
 
-#include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
-#include "imgui_memory_editor/imgui_memory_editor.h"
-#include "ImGuiFileDialog.h"
 
 #include "Window.h"
 
@@ -29,17 +26,9 @@ private:
     void updateEvents();
     void updateScreen();
 
-    // View state varialbes
-    bool loadRom = false;
-    bool executeRom = false;
-    bool followPC = false;
-    int cpu_speed = 1;
-
     ImGuiIO io;
     SDL_GLContext gl_context;
     SDL_Window* window = nullptr;
-
-    MemoryEditor mem_edit;
 };
 
 

@@ -6,7 +6,6 @@ project(${PROJECT_NAME})
 set(SRC_PATH "${CMAKE_SOURCE_DIR}")
 set(APPS_PATH "${CMAKE_SOURCE_DIR}/apps")
 set(TEST_PATH "${CMAKE_SOURCE_DIR}/tests")
-set(ICON_PATH "${CMAKE_SOURCE_DIR}/data/icons")
 set(IMGUI_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 set(IMGUI_CLUB_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_club")
 set(IMGUI_FILE_DIALOG_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_filedialog")
@@ -71,25 +70,25 @@ include_directories("${IMGUI_PATH}/backends")
 # ---------------------------------- Build Targets ----------------------------------
 
 # Console library
-add_library("${PROJECT_NAME}_lib" ${SRC_FILES})
-target_link_libraries("${PROJECT_NAME}_lib" ${SDL2_LIBRARIES})
+add_library(console_lib ${SRC_FILES})
+target_link_libraries(console_lib ${SDL2_LIBRARIES})
 
 # GTest EXE
-add_executable("${PROJECT_NAME}_test" ${TEST_FILES})
-target_link_libraries("${PROJECT_NAME}_test" "${PROJECT_NAME}_lib" gtest_main)
-gtest_discover_tests("${PROJECT_NAME}_test")
+add_executable(console_lib_test ${TEST_FILES})
+target_link_libraries(console_lib_test console_lib gtest_main)
+gtest_discover_tests(console_lib_test)
 
 # imgui lib
-add_library("${PROJECT_NAME}_imgui_lib" ${IMGUI_FILES} ${IMGUI_BACKEND_FILES} ${IMGUI_CLUB_FILES} ${IMGUI_FILE_DIALOG_FILES})
-target_link_libraries("${PROJECT_NAME}_imgui_lib" ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
+add_library(imgui_lib ${IMGUI_FILES} ${IMGUI_BACKEND_FILES} ${IMGUI_CLUB_FILES} ${IMGUI_FILE_DIALOG_FILES})
+target_link_libraries(imgui_lib ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 # target_link_options("${PROJECT_NAME}_imgui_lib" PUBLIC "-limm32")
 # Workaround, mingw cant seem to find and link to imm32 library 
-target_compile_definitions("${PROJECT_NAME}_imgui_lib" PUBLIC IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
+target_compile_definitions(imgui_lib PUBLIC IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
 
 # imgui example
-add_executable("${PROJECT_NAME}_imgui_example" "./lib/imgui/examples/example_sdl_opengl3/main.cpp")
-target_link_libraries("${PROJECT_NAME}_imgui_example" "${PROJECT_NAME}_imgui_lib")
+add_executable(imgui_example "./lib/imgui/examples/example_sdl_opengl3/main.cpp")
+target_link_libraries(imgui_example imgui_lib)
 
-# 6502 emulator EXE
-add_executable("6502_emulator" "${APPS_PATH}/6502_emulator.cpp" "${ICON_PATH}/6502_emulator.o")
-target_link_libraries("6502_emulator" "${PROJECT_NAME}_lib" "${PROJECT_NAME}_imgui_lib")
+# add app subdirs
+FILE(GLOB apps "${APPS_PATH}/*")
+add_subdirectory(${apps})

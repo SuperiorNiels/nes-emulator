@@ -8,11 +8,11 @@
 
 #include "CPU.h"
 
-# define MAX_MEM 0xFFFF
 
 class Memory {
 public:
     Memory() {};
+    explicit Memory(const uint32_t mem_size);
 
     void reset();
     void loadBinary(const char* filename);
@@ -23,9 +23,14 @@ public:
     void write(int64_t& cycles, uint16_t addr, uint8_t data);
 
     uint8_t* getMemoryStartPointer();
-private:
-    uint8_t mem[MAX_MEM]{}; // 16K
+    const uint32_t getMemorySize() const;
 
+    ~Memory();
+private:
+    //uint8_t* mem;
+    //std::vector<uint8_t> mem;
+    uint8_t mem[0xFFFF];
+    uint32_t mem_size = 0xFFFF;
 };
 
 #endif //NES_MEMORY_H

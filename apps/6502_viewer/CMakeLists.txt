@@ -8,6 +8,5 @@ file(GLOB_RECURSE APP_SOURCES "${APP_PATH}/**.h" "${APP_PATH}/**.cpp")
 
 # ---------------------------------- Build Targets ----------------------------------
 
-# 6502 viewer EXE
 add_executable(${APP_NAME} ${APP_SOURCES} ${ICON_PATH})
 target_link_libraries(${APP_NAME} console_lib imgui_lib)

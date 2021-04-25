@@ -61,7 +61,7 @@ bool MainGUI::render() {
             mem_edit.GotoAddr = cpu_state.PC;
             mem_edit.DataEditingTakeFocus = false;
         }
-        mem_edit.DrawContents((void*) console->mem.getMemoryStartPointer(), MAX_MEM + 1);
+        mem_edit.DrawContents((void*) console->mem.getMemoryStartPointer(), console->mem.getMemorySize() + 1);
         ImGui::EndChild();
         
         ImGui::Separator();

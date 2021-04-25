@@ -1,7 +1,17 @@
 #include "Memory.h"
 
+
+Memory::Memory(const uint32_t mem_size) {
+    this->mem_size = mem_size;
+    //this->mem = uint8_t[mem_size];
+}
+
 uint8_t* Memory::getMemoryStartPointer() {
     return mem;
+}
+
+const uint32_t Memory::getMemorySize() const {
+    return (const uint32_t) mem_size;
 }
 
 void Memory::loadBinary(const char *filename) {
@@ -12,13 +22,13 @@ void Memory::loadBinary(const char *filename) {
 
     DEBUG("File size: %ld\n", size);
 
-    if(size > MAX_MEM + 1) {
+    if(size > mem_size + 1) {
         DEBUG("File is to big (max. 64K).\n");
         //return;
-        size = MAX_MEM + 1;
+        size = mem_size + 1;
     }
 
-    char buffer[MAX_MEM + 1];
+    char buffer[mem_size + 1];
     if(!file.read(buffer, size)) {
         DEBUG("Something went wrong while reading file.\n");
         file.close();
@@ -26,7 +36,7 @@ void Memory::loadBinary(const char *filename) {
     }
 
     DEBUG("File loaded.\n");
-    memcpy(mem, buffer, MAX_MEM + 1);
+    memcpy(mem, buffer, mem_size + 1);
     file.close();
 }
 
@@ -72,25 +82,7 @@ uint16_t Memory::calc_addr(int64_t& cycles, addr_mode mode, cpu_state state) {
 uint8_t Memory::read(int64_t& cycles,uint16_t addr) {
     uint8_t ppu_register;
     cycles++; // alyways use 1 cycle for reading
-    /*switch(addr) {
-        case 0 ... 0x07FF: return mem[addr];        // 2kB internal RAM
-        case 0x0800 ... 0x0FFF: return mem[addr - 0x0800];   // mirror of RAM
-        case 0x1000 ... 0x17FF: return mem[addr - 0x1000];   // mirror of RAM
-        case 0x1800 ... 0x1FFF: return mem[addr - 0x1800];   // mirror of RAM
-        case 0x2000 ... 0x3FFF:
-            // PPU registers: 0x2000 - 0x2007, rest are mirror of these 8 registers
-            ppu_register = (addr - 0x2000) % 8;
-            break;
-        case 0x4000 ... 0x4017: break; // NES APU and I/O registers
-        case 0x4018 ... 0x401F: break; // normally disabled
-        case 0x4020 ... 0xFFFF:
-            // Read from cartridge
-            break;
-        default:
-            break;
-    }*/
     return mem[addr];
-    //return 0x00;
 }
 
 uint16_t Memory::read16(int64_t& cycles, uint16_t addr) {
@@ -105,5 +97,9 @@ void Memory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
 }
 
 void Memory::reset() {
-    memset(mem, 0, 0xFFFF);
+    memset(mem, 0, mem_size);
+}
+
+Memory::~Memory() {
+    //delete mem;
 }

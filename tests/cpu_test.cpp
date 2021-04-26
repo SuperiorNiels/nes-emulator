@@ -4,7 +4,7 @@
 
 TEST(CPU_TESTS, FullFunctionalTestNoDecimal) {
     CPU cpu;
-    Memory mem;
+    Memory mem(0xFFFF);
 
     const char* bin_location = "../data/roms/functional_test_no_decimal_ops.bin";
 

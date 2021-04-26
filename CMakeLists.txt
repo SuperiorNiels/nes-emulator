@@ -90,5 +90,9 @@ add_executable(imgui_example "./lib/imgui/examples/example_sdl_opengl3/main.cpp"
 target_link_libraries(imgui_example imgui_lib)
 
 # add app subdirs
-FILE(GLOB apps "${APPS_PATH}/*")
-add_subdirectory(${apps})
+FILE(GLOB APPS "${APPS_PATH}/**")
+foreach(APP ${APPS})
+     add_subdirectory(${APP})
+     message("App added: ${APP}")
+endforeach()
+

@@ -11,7 +11,7 @@ const int WINDOW_HEIGHT = 50;
 int main(int argc, char* args[])
 {
     for(int i = 0; i < 20; i++) {
-        auto mem = Memory(1000000000); // 5 Gb mem
+        auto mem = Memory(1000000000); // 1 Gb mem
         mem.reset();
     }
 

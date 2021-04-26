@@ -2,7 +2,7 @@
 
 Console::Console() {
     // Init memory
-    //mem = Memory(0x1FFF);
+    mem = Memory(0x1FFF);
     mem.reset();
 
     // Init cpu

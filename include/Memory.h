@@ -27,10 +27,9 @@ public:
 
     ~Memory();
 private:
-    //uint8_t* mem = nullptr;
-    //std::vector<uint8_t> mem;
-    uint8_t mem[0xFFFF];
-    uint32_t mem_size = 0xFFFF;
+    bool mem_initialized = false;
+    uint8_t* mem = nullptr;
+    uint32_t mem_size = 0x0;
 };
 
 #endif //NES_MEMORY_H

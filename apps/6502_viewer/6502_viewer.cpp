@@ -10,14 +10,22 @@ const int WINDOW_HEIGHT = 600;
 
 int main(int argc, char* args[])
 {
-    Console c;
-    auto gui = MainGUI(&c);
+    auto cpu = CPU();
+    cpu.setResetVector(0x0400);
+    cpu.setCPUSignal(RESET, true);
+    auto mem = Memory(0xFFFF); // 16kb memory
+    mem.reset();
+    auto gui = MainGUI(&cpu, &mem);
+    cpu.attachMemeory(&mem);
+    cpu.execute(1); // execute to reset cpu (set known state)
+
     auto factory = WindowFactory_SDL();
     auto window = factory.createWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+
     window->init();
     window->addView(&gui);
     while(window->isOpen()) window->update();
     window->close();
-    
+
     return 0;
 }

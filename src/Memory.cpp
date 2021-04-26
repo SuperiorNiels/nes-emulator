@@ -27,7 +27,7 @@ void Memory::loadBinary(const char *filename) {
     if(size > mem_size + 1) {
         DEBUG("File is to big (max. 64K).\n");
         //return;
-        size = mem_size + 1;
+        size = mem_size + 1; // only copy the max size
     }
 
     char buffer[mem_size + 1];

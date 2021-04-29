@@ -109,5 +109,5 @@ void Memory::reset() {
 }
 
 Memory::~Memory() {
-    delete mem;
+    free(mem);
 }

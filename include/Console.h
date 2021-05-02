@@ -13,9 +13,10 @@ public:
     void loadROM(const char* filename);
     void run();
 
-    Memory mem;
     CPU cpu;
+    // PPU ppu; TODO
 
+    Memory cpuMem;
 };
 
 

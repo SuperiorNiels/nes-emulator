@@ -1,6 +1,7 @@
 #include <iostream>
 
-#include "Console.h"
+#include "CPU.h"
+#include "DirectMemory.h"
 #include "SDL/Window_SDL.h"
 #include "views/MainGUI.h"
 
@@ -13,7 +14,7 @@ int main(int argc, char* args[])
     auto cpu = CPU();
     cpu.setResetVector(0x0400);
     cpu.setCPUSignal(RESET, true);
-    auto mem = Memory(0xFFFF); // 16kb memory
+    auto mem = DirectMemory(0xFFFF); // 16kb memory
     mem.reset();
     auto gui = MainGUI(&cpu, &mem);
     cpu.attachMemeory(&mem);

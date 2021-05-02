@@ -36,7 +36,7 @@ bool MainGUI::render() {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
             DEBUG("Seleceted file: %s\n", filePathName.c_str());
-            mem->loadBinary(filePathName.c_str());
+            mem->loadROM(filePathName.c_str());
             cpu->setCPUSignal(RESET, true);
             cpu->execute(1);
         }
@@ -53,15 +53,16 @@ bool MainGUI::render() {
         auto cpu_flags = cpu->getCPUFlags();
         auto cpu_cycles = cpu->getCPUExecutedCycles();
         auto cpu_instruction = cpu->getCurrentInstruction();
+        auto current_reset_vector = cpu->getResetVector();
 
         // Memory viewer
-        float footer_height = style.ItemSpacing.y + 20 + ImGui::GetTextLineHeightWithSpacing() * 4;
+        float footer_height = style.ItemSpacing.y + 30 + ImGui::GetTextLineHeightWithSpacing() * 5;
         ImGui::BeginChild("mem_view", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
         if(followPC) {
             mem_edit.GotoAddr = cpu_state.PC;
             mem_edit.DataEditingTakeFocus = false;
         }
-        mem_edit.DrawContents((void*) mem->getMemoryStartPointer(), mem->getMemorySize() + 1);
+        mem_edit.DrawContents((void*) mem->getMemoryPointer(), mem->getMemorySize() + 1);
         ImGui::EndChild();
         
         ImGui::Separator();
@@ -75,6 +76,30 @@ bool MainGUI::render() {
             else { ImGui::SameLine(); ImGui::Text("-"); }
         }
         ImGui::SameLine(); ImGui::Text("\t Cycles: %ld", cpu_cycles);
+
+        if (ImGui::BeginTable("checkers", 6)) {
+            ImGui::TableNextColumn();
+                if(ImGui::Button("NMI")) { cpu->setCPUSignal(NMI, true); cpu->execute(1); }
+                ImGui::SameLine(); if(ImGui::Button("IRQ")) { cpu->setCPUSignal(IRQ, true); cpu->execute(1); }
+                ImGui::SameLine(); if(ImGui::Button("RESET")) { cpu->setCPUSignal(RESET, true); cpu->execute(1); }
+
+            ImGui::TableNextColumn();
+                char reset_vector_buf[4];
+                ImGui::Text("CPU reset vector: ");
+                ImGui::TableNextColumn();
+                sprintf(reset_vector_buf, "%X", current_reset_vector); 
+                if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    uint16_t reset_vector;
+                    if (sscanf(reset_vector_buf, "%4hX", &reset_vector) == 1) {
+                        cpu->setResetVector(reset_vector);
+                        //cpu->setCPUSignal(RESET, true);
+                        //cpu->execute(1);
+                    }
+                }
+
+            ImGui::EndTable();
+        }
+
         if (ImGui::BeginTable("checkers", 6)) {
             ImGui::TableNextColumn(); ImGui::Checkbox("CPU Execute", &executeRom);
             ImGui::TableNextColumn(); ImGui::Text("Speed (cycles):");
@@ -85,35 +110,25 @@ bool MainGUI::render() {
 
         if(ImGui::BeginTable("bottons", 6)) {
             ImGui::TableNextColumn(); 
-            if(ImGui::Button("Run Step")) {
-                cpu->execute(1);
-            }
-            ImGui::TableNextColumn(); 
-            char run_cycles[16];
-            ImGui::Text("Run Cycles: ");
-            ImGui::TableNextColumn(); 
-            memset(run_cycles, 0, sizeof(run_cycles));
-            if (ImGui::InputText("##cycles", run_cycles, sizeof(run_cycles), ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                int64_t _cycles = 0;
-                if (sscanf(run_cycles, "%ld", &_cycles) == 1) {
-                    cpu->execute(_cycles);
-                }
-            }
-            ImGui::TableNextColumn(); 
-            char reset_vector_buf[4];
-            ImGui::Text("CPU reset vector: ");
-            ImGui::TableNextColumn(); 
-            sprintf(reset_vector_buf, "%X", 0x400); 
-            if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                uint16_t reset_vector;
-                if (sscanf(reset_vector_buf, "%4hX", &reset_vector) == 1) {
-                    cpu->setResetVector(reset_vector);
-                    cpu->setCPUSignal(RESET, true);
+                if(ImGui::Button("Run Step")) {
                     cpu->execute(1);
                 }
-            }
+
+            ImGui::TableNextColumn(); 
+                char run_cycles[16];
+                ImGui::Text("Run Cycles: ");
+                ImGui::TableNextColumn(); 
+                memset(run_cycles, 0, sizeof(run_cycles));
+                if (ImGui::InputText("##cycles", run_cycles, sizeof(run_cycles), ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    int64_t _cycles = 0;
+                    if (sscanf(run_cycles, "%ld", &_cycles) == 1) {
+                        cpu->execute(_cycles);
+                    }
+                }
+            
             ImGui::EndTable();
         }
+
     ImGui::EndChild();
 
     ImGui::BeginChild("performance", ImVec2(0, 0));

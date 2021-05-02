@@ -16,7 +16,7 @@ public:
     CPU cpu;
     // PPU ppu; TODO
 
-    Memory cpuMem;
+    //Memory cpuMem;
 };
 
 

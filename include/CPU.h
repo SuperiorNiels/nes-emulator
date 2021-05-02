@@ -2,7 +2,11 @@
 #define NES_CPU_H
 
 #include <iostream>
+#include <cstdlib>
+#include <cstring>
 #include <stdint-gcc.h>
+
+#include "Memory.h"
 #include "Instructions.h"
 #include "Debug.h"
 
@@ -54,6 +58,7 @@ public:
     bool* getCPUFlags() const;
     int64_t getCPUExecutedCycles() const;
     instruction getCurrentInstruction();
+    uint16_t getResetVector() const;
 
 private:
     bool flags[8];
@@ -70,6 +75,7 @@ private:
     void reset();
     void interrupt(uint16_t vector);
     void executeInstruction(int64_t& cycles, const instruction& instr);
+    uint16_t calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& state);
     void update_CV_flags(uint8_t param, int16_t result);
     void update_ZN_flags(uint8_t param);
     void push_stack(int64_t& cycles, uint8_t value);

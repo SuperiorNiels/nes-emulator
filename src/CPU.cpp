@@ -1,5 +1,5 @@
 #include "CPU.h"
-#include "Memory.h"
+
 
 CPU::CPU() {
     initialize_instructions(&instructions);
@@ -61,7 +61,7 @@ void CPU::interrupt(uint16_t vector) {
     push_stack(cycles, result >> 8);
     push_stack(cycles, result);
     push_stack(cycles, convertFlagsToByte());
-    state.PC = mem->read16(cycles, vector);
+    state.PC = (mem->read(cycles, vector) | (mem->read(cycles, vector + 1) << 8));
     flags[I] = true;
 }
 
@@ -75,6 +75,46 @@ void CPU::setCPUSignal(cpu_signals signal, bool state) {
 
 void CPU::attachMemeory(Memory* memory) {
     CPU::mem = memory;
+}
+
+uint16_t CPU::calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& state) {    
+    uint16_t temp;
+
+    switch(mode) {
+        case ADDR_IMP:
+        case ADDR_ACC:
+            break;
+        case ADDR_IMM:
+            return state.PC + 1;
+        case ADDR_ZER:
+            return mem->read(cycles, state.PC + 1);
+        case ADDR_ZEX:
+            return (mem->read(cycles, state.PC + 1) + state.X) & 0x00FF;
+        case ADDR_ZEY:
+            return (mem->read(cycles, state.PC + 1) + state.Y) & 0x00FF;
+        case ADDR_REL:
+            return state.PC + 1;
+        case ADDR_ABS:
+            return (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8));
+        case ADDR_ABX:
+            return (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8)) + state.X;
+        case ADDR_ABY:
+            return (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8)) + state.Y;
+        case ADDR_IND:
+            temp = (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8));
+            return (mem->read(cycles, temp) | (mem->read(cycles, temp + 1) << 8));
+        case ADDR_INX:
+            temp = ((mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8)) + state.X) & 0xFF;
+            return (mem->read(cycles, temp) | (mem->read(cycles, temp + 1) << 8));
+        case ADDR_INY:
+            temp = mem->read(cycles, state.PC + 1);
+            return (mem->read(cycles, temp) | (mem->read(cycles, temp + 1) << 8)) + state.Y;
+        default:
+            DEBUG("ERROR: unkown addressing mode.\n");;
+            break;
+    }
+
+    return 0x0000;
 }
 
 void CPU::execute(int64_t max_cycles) {
@@ -157,12 +197,16 @@ void CPU::printFullState() {
     DEBUG("\n");
 }
 
+uint16_t CPU::getResetVector() const {
+    return (uint16_t) reset_vector;
+}
+
 void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
     uint8_t param;
     uint16_t result, mem_loc;
 
     if(instr.mode != ADDR_IMP) {
-        mem_loc = mem->calc_addr(cycles, instr.mode, state);
+        mem_loc = calc_addr(cycles, instr.mode, state);
         param = mem->read(cycles, mem_loc);
     }
 

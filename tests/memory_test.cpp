@@ -1,28 +1,21 @@
 #include <gtest/gtest.h>
-#include "Memory.h"
+#include "DirectMemory.h"
 
-TEST(MEM_TESTS, MemoryInitReadWriteTest) {
+
+TEST(MEM_TESTS, DirectMemoryInitReadWriteTest) {
     int64_t cycle_count = 0;
-    Memory mem;
+    DirectMemory mem(1024);
     
-    {
-        Memory mem(1024); // 1024 byte mem
-        mem.reset();
-    
-        EXPECT_EQ(mem.getMemorySize(), 1024);
-        EXPECT_EQ(mem.read(cycle_count, 512), 0x00);
+    mem.reset();
 
-        mem.write(cycle_count, 512, 0x45);
-        EXPECT_EQ(mem.read(cycle_count, 512), 0x45);
-        mem.write(cycle_count, 513, 0x46);
-        EXPECT_EQ(mem.read(cycle_count, 513), 0x46);
-        EXPECT_EQ(mem.read16(cycle_count, 512), 0x4645); // little endian
-    }
+    EXPECT_EQ(mem.getMemorySize(), 1024);
+    EXPECT_EQ(mem.read(cycle_count, 512), 0x00);
 
-    // Memory should be unset
-    EXPECT_EQ(mem.getMemorySize(), 0);
-    EXPECT_EQ(mem.read(cycle_count, 512), 0); // does not add to cycle count   
+    mem.write(cycle_count, 512, 0x45);
+    EXPECT_EQ(mem.read(cycle_count, 512), 0x45);
+    mem.write(cycle_count, 513, 0x46);
+    EXPECT_EQ(mem.read(cycle_count, 513), 0x46);
 
     // Cycles check
-    EXPECT_EQ(cycle_count, 7);
+    EXPECT_EQ(cycle_count, 5);
 }

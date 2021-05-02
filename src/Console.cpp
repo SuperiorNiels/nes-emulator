@@ -2,14 +2,14 @@
 
 Console::Console() {
     // Init memory
-    mem = Memory(0x1FFF);
-    mem.reset();
+    cpuMem = Memory(2048);
+    cpuMem.reset();
 
     // Init cpu
     cpu = CPU();
     cpu.setResetVector(0x0400);
     cpu.setCPUSignal(RESET, true);
-    cpu.attachMemeory(&mem);
+    cpu.attachMemeory(&cpuMem);
     cpu.execute(1); // execute to reset cpu (set known state)
 }
 

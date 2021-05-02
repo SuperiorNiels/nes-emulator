@@ -14,5 +14,5 @@ Console::Console() {
 }
 
 void Console::loadROM(const char *filename) {
-    mem.loadBinary(filename);
+    cpuMem.loadBinary(filename);
 }

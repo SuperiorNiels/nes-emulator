@@ -33,24 +33,34 @@ void NESMemory::loadROM(const char* filename) {
     }
     DEBUG("Valid iNES file opened, configuring mapper.\n");
 
-    // Check PRG and CHR rom sizes
+    // Check PRG and CHR rom sizes and copy data in memory
+    if(PRG != nullptr) delete PRG;
+    if(CHR != nullptr) delete CHR;
+    // TODO: this is probably dangerous code, there has to be a better way
     PRG_size = buffer[4]; // Kb
+    PRG = new DirectMemory(PRG_size * 16384);
+    memcpy(PRG->getMemoryPointer(), buffer + 15, PRG->getMemorySize());
     DEBUG("PRG size: %d * 16384 Kb\n", PRG_size);
     CHR_size = buffer[5]; // Kb
+    CHR = new DirectMemory(CHR_size * 8192);
+    memcpy(CHR->getMemoryPointer(), buffer + 15 + PRG->getMemorySize(), CHR->getMemorySize());
     DEBUG("CHR size: %d * 8192 Kb\n", CHR_size);
 
     // Determine mapper
     uint8_t lower = (buffer[6] & 0b11110000) >> 4;
     uint8_t upper = buffer[7] & 0b11110000;
-    uint8_t mapper = upper ^ lower;
-    DEBUG("NES file loaded mapper ID: %d\n", mapper);
+    uint8_t mapper_id = upper ^ lower;
+    DEBUG("NES file loaded mapper ID: %d\n", mapper_id);
 
-    if(mapper != 0) {
-        DEBUG("NES ROM containes unsupported mapper (%d). Unloading ROM.\n", mapper);
-        return;
+    switch(mapper_id) {
+        case 0:
+            mapper = new Mapper000(PRG_size, CHR_size);
+            return;
+        default:
+            break;
     }
-
-    memcpy(mem, buffer, this->mem_size);
+    
+    DEBUG("NES ROM containes unsupported mapper (%d).\n", mapper);
     return;
 }
 
@@ -69,4 +79,8 @@ void NESMemory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
 void NESMemory::reset() {
     if(!mem_initialized) { DEBUG("Memory not initialized yet (load_bin).\n"); return; } 
     memset(mem, 0, mem_size);
+}
+
+NESMemory::~NESMemory() {
+    delete PRG, CHR, mapper;
 }

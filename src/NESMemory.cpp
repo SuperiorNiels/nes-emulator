@@ -39,11 +39,11 @@ void NESMemory::loadROM(const char* filename) {
     // TODO: this is probably dangerous code, there has to be a better way
     PRG_size = buffer[4]; // Kb
     PRG = new DirectMemory(PRG_size * 16384);
-    memcpy(PRG->getMemoryPointer(), buffer + 15, PRG->getMemorySize());
+    memcpy(PRG->getMemoryPointer(), buffer + 16, PRG->getMemorySize());
     DEBUG("PRG size: %d * 16384 Kb\n", PRG_size);
     CHR_size = buffer[5]; // Kb
     CHR = new DirectMemory(CHR_size * 8192);
-    memcpy(CHR->getMemoryPointer(), buffer + 15 + PRG->getMemorySize(), CHR->getMemorySize());
+    memcpy(CHR->getMemoryPointer(), buffer + 16 + PRG->getMemorySize(), CHR->getMemorySize());
     DEBUG("CHR size: %d * 8192 Kb\n", CHR_size);
 
     // Determine mapper

@@ -29,7 +29,7 @@ bool MainGUI::render() {
 
     // Load ROM file Dialog
     if(loadRom) {
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".bin,.rom,.nes", "../");
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".nes,.rom,.bin", "../");
         loadRom = false;
     }  
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
@@ -62,7 +62,7 @@ bool MainGUI::render() {
             mem_edit.GotoAddr = cpu_state.PC;
             mem_edit.DataEditingTakeFocus = false;
         }
-        mem_edit.DrawContents((void*) mem->getMemoryPointer(), mem->getMemorySize() + 1);
+        mem_edit.DrawContents((void*) mem->getMemoryPointer(), mem->getMemorySize());
         ImGui::EndChild();
         
         ImGui::Separator();

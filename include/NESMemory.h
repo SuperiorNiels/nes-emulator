@@ -23,6 +23,7 @@ public:
     ~NESMemory() override {};
 
 private:
+    uint8_t PRG_size = 0, CHR_size = 0;
 };
 
 #endif

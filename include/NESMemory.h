@@ -28,6 +28,8 @@ public: // TODO make private and expose necessary data (public for debugging)
     Mapper* mapper = nullptr;
     DirectMemory* PRG = nullptr;
     DirectMemory* CHR = nullptr;
+    DirectMemory* PPU_registers = nullptr;
+    DirectMemory* workRAM = nullptr;
 };
 
 #endif

@@ -29,6 +29,7 @@ instruction CPU::getCurrentInstruction() {
 }
 
 void CPU::reset() {
+    cycles = 0;
     state.PC = (mem->read(cycles, reset_vector) | (mem->read(cycles, reset_vector + 1) << 8));
     state.AC = 0x00;
     state.X = 0x00;

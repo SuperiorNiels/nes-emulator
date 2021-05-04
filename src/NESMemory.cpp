@@ -55,17 +55,18 @@ void NESMemory::loadROM(const char* filename) {
     switch(mapper_id) {
         case 0:
             mapper = new Mapper000(PRG_size, CHR_size);
-            return;
-        default:
             break;
+        default:
+            DEBUG("NES ROM containes unsupported mapper (%d).\n", mapper);
+            return;
     }
 
     // Create NES memory map
     workRAM = new DirectMemory(0x2000);
     PPU_registers = new DirectMemory(8); // 8 bytes 
-    
-    DEBUG("NES ROM containes unsupported mapper (%d).\n", mapper);
-    return;
+
+    // Success
+    DEBUG("ROM loaded successfully!\n");
 }
 
 uint8_t NESMemory::read(int64_t& cycles, uint16_t addr) {
@@ -75,7 +76,7 @@ uint8_t NESMemory::read(int64_t& cycles, uint16_t addr) {
     int64_t tmp; // for accessing
     switch(addr) {
         case 0 ... 0x1FFF: return mem[addr & 0x07FF];                                       // 2kB internal RAM
-        case 0x2000 ... 0x3FFF: return PPU_registers->read(tmp, addr & 0x2008);             // PPU registers (repeat every 8 bytes)
+        case 0x2000 ... 0x3FFF: return PPU_registers->read(tmp, (addr - 0x2000) & 0x8);             // PPU registers (repeat every 8 bytes)
         case 0x4000 ... 0x4017: break;                                                      // NES APU and I/O registers
         case 0x4018 ... 0x401F: return 0x00;                                                // Disabled
         case 0x4020 ... 0x5FFF: DEBUG("[READ] accessing expansion ROM.\n"); return 0x00;    // Expansion rom
@@ -94,7 +95,7 @@ void NESMemory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
     int64_t tmp; // for accessing
     switch(addr) {
         case 0 ... 0x1FFF: mem[addr & 0x07FF] = data; return;                                               // 2kB internal RAM
-        case 0x2000 ... 0x3FFF: return PPU_registers->write(tmp, addr & 0x2008, data); return;              // PPU registers (repeat every 8 bytes)
+        case 0x2000 ... 0x3FFF: return PPU_registers->write(tmp, (addr - 0x2000) & 0x8, data); return;              // PPU registers (repeat every 8 bytes)
         case 0x4000 ... 0x4017: return;                                                                     // NES APU and I/O registers
         case 0x4018 ... 0x401F: return;                                                                     // Disabled
         case 0x4020 ... 0x5FFF: DEBUG("[READ] accessing expansion ROM.\n"); return;                         // Expansion rom

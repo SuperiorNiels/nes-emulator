@@ -1,6 +1,6 @@
 #include "MainGUI.h"
 
-MainGUI::MainGUI(CPU* cpu, NESMemory* mem) : cpu(cpu), mem(mem) {
+MainGUI::MainGUI(CPU* cpu, CPU_Bus* bus) : cpu(cpu), bus(bus) {
     //mem_edit.ReadOnly = true;
     //mem_edit.OptShowDataPreview = true;
     //mem_edit.OptShowOptions = false;
@@ -36,7 +36,7 @@ bool MainGUI::render() {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
             DEBUG("Seleceted file: %s\n", filePathName.c_str());
-            mem->loadROM(filePathName.c_str());
+            bus->openROM(filePathName.c_str());
             cpu->setCPUSignal(RESET, true);
             cpu->execute(1);
         }
@@ -52,27 +52,27 @@ bool MainGUI::render() {
 
         float full_heigth = ImGui::GetWindowHeight() - footer_size;
 
-        if(mem->PRG != nullptr) {
+        if(bus->cartridge->PRG != nullptr) {
             ImGui::BeginChild("mem1", ImVec2(0, full_heigth / 4), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-            ImGui::Text("NES CPU RAM (size: %d bytes)", mem->getMemorySize());
+            ImGui::Text("NES CPU RAM (size: %d bytes)", bus->cpuRAM->getMemorySize());
             ImGui::Separator();
-            cpuRAM.DrawContents((void*) mem->getMemoryPointer(), mem->getMemorySize());
+            cpuRAM.DrawContents((void*)  bus->cpuRAM->getMemoryPointer(),  bus->cpuRAM->getMemorySize());
             ImGui::EndChild();
 
             ImGui::Separator();
 
             ImGui::BeginChild("mem2", ImVec2(0, full_heigth / 4), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-            ImGui::Text("CARTRIDGE PRG ROM (size: %d bytes, split in %d banks.)", mem->PRG->getMemorySize(), mem->PRG_size);
+            ImGui::Text("CARTRIDGE PRG ROM (size: %d bytes, split in %d banks.)", bus->cartridge->PRG->getMemorySize(), bus->cartridge->nPRGBanks);
             ImGui::Separator();
-            PRG.DrawContents((void*) mem->PRG->getMemoryPointer(), mem->PRG->getMemorySize());
+            PRG.DrawContents((void*) bus->cartridge->PRG->getMemoryPointer(), bus->cartridge->PRG->getMemorySize());
             ImGui::EndChild();
             
             ImGui::Separator();
 
             ImGui::BeginChild("mem3", ImVec2(0, full_heigth / 4), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-            ImGui::Text("CARTRIDGE CHR ROM (size: %d bytes, split in %d banks.)", mem->CHR->getMemorySize(), mem->CHR_size);
+            ImGui::Text("CARTRIDGE CHR ROM (size: %d bytes, split in %d banks.)", bus->cartridge->CHR->getMemorySize(), bus->cartridge->nCHRBanks);
             ImGui::Separator();
-            CHR.DrawContents((void*) mem->CHR->getMemoryPointer(), mem->CHR->getMemorySize());
+            CHR.DrawContents((void*) bus->cartridge->CHR->getMemoryPointer(), bus->cartridge->CHR->getMemorySize());
             ImGui::EndChild(); 
 
             ImGui::BeginChild("cpu", ImVec2(0, full_heigth / 4), true, 0);
@@ -83,7 +83,7 @@ bool MainGUI::render() {
                 auto cpu_instruction = cpu->getCurrentInstruction();
                 auto current_reset_vector = cpu->getResetVector();
 
-                ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, mem->read(tmp, cpu_state.PC));
+                ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, bus->read(tmp, cpu_state.PC));
                 ImGui::SameLine();
                 ImGui::Text("| PC: %4X | AC: %2X | X: %2X | Y: %2X | SP: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);        
                 ImGui::Text("Flags: ");

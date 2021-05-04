@@ -2,8 +2,8 @@
 #define CPUVIEWER
 
 #include "View.h"
-#include "Console.h"
-#include "NESMemory.h"
+#include "CPU.h"
+#include "CPU_Bus.h"
 
 #include "imgui.h"
 #include "imgui_memory_editor/imgui_memory_editor.h"
@@ -14,13 +14,13 @@ class MainGUI : public View {
 public:
 
     MainGUI() = delete;
-    MainGUI(CPU* cpu, NESMemory* mem);
+    MainGUI(CPU* cpu, CPU_Bus* bus);
 
     bool render() override;
 
 private:
     CPU* cpu = nullptr; 
-    NESMemory* mem = nullptr;
+    CPU_Bus* bus = nullptr;
 
     // View state varialbes
     MemoryEditor cpuRAM;

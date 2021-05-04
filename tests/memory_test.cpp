@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "DirectMemory.h"
+#include "Memory.h"
 
 
-TEST(MEM_TESTS, DirectMemoryInitReadWriteTest) {
+TEST(MEM_TESTS, MemoryInitReadWriteTest) {
     int64_t cycle_count = 0;
-    DirectMemory mem(1024);
+    Memory mem(1024);
     
     mem.reset();
 

@@ -1,13 +1,13 @@
-#include "DirectMemory.h"
+#include "Memory.h"
 
 
-DirectMemory::DirectMemory(const uint32_t size) {
+Memory::Memory(const uint32_t size) {
     this->mem_size = size;
     this->mem = new uint8_t[(int) size]{};
     this->mem_initialized = true;
 }
 
-void DirectMemory::loadROM(const char* filename) {
+void Memory::loadROM(const char* filename) {
     if(!mem_initialized) { DEBUG("Memory not initialized yet (load_bin).\n"); return; } 
     DEBUG("Loading binary program: %s\n", filename);
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
@@ -34,19 +34,19 @@ void DirectMemory::loadROM(const char* filename) {
     file.close();
 }
 
-uint8_t DirectMemory::read(int64_t& cycles, uint16_t addr) {
+uint8_t Memory::read(int64_t& cycles, uint16_t addr) {
     if(!mem_initialized) { DEBUG("Memory not initialized yet (load_bin).\n"); return 0x00; } 
     cycles++; // alyways use 1 cycle for reading
     return mem[addr];
 }
 
-void DirectMemory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
+void Memory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
     if(!mem_initialized) { DEBUG("Memory not initialized yet (load_bin).\n"); return; } 
     cycles++;
     mem[addr] = data;
 }
 
-void DirectMemory::reset() {
+void Memory::reset() {
     if(!mem_initialized) { DEBUG("Memory not initialized yet (load_bin).\n"); return; } 
     memset(mem, 0, mem_size);
 }

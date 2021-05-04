@@ -24,13 +24,13 @@ int64_t CPU::getCPUExecutedCycles() const {
 
 instruction CPU::getCurrentInstruction() {
     int64_t tmp;
-    uint8_t opcode = mem->read(tmp, state.PC); 
+    uint8_t opcode = bus->read(tmp, state.PC); 
     return instructions[opcode];
 }
 
 void CPU::reset() {
-    cycles = 0;
-    state.PC = (mem->read(cycles, reset_vector) | (mem->read(cycles, reset_vector + 1) << 8));
+    //cycles = 0;
+    state.PC = (bus->read(cycles, reset_vector) | (bus->read(cycles, reset_vector + 1) << 8));
     state.AC = 0x00;
     state.X = 0x00;
     state.Y = 0x00;
@@ -66,7 +66,7 @@ void CPU::interrupt(uint16_t vector) {
     push_stack(cycles, result >> 8);
     push_stack(cycles, result);
     push_stack(cycles, convertFlagsToByte());
-    state.PC = (mem->read(cycles, vector) | (mem->read(cycles, vector + 1) << 8));
+    state.PC = (bus->read(cycles, vector) | (bus->read(cycles, vector + 1) << 8));
     flags[I] = true;
 }
 
@@ -78,8 +78,8 @@ void CPU::setCPUSignal(cpu_signals signal, bool state) {
     signals[signal] = state;
 }
 
-void CPU::attachMemeory(Memory* memory) {
-    CPU::mem = memory;
+void CPU::attachBus(Bus* bus) {
+    this->bus = bus;
 }
 
 uint16_t CPU::calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& state) {    
@@ -92,28 +92,28 @@ uint16_t CPU::calc_addr(int64_t& cycles, addr_mode mode, const cpu_state& state)
         case ADDR_IMM:
             return state.PC + 1;
         case ADDR_ZER:
-            return mem->read(cycles, state.PC + 1);
+            return bus->read(cycles, state.PC + 1);
         case ADDR_ZEX:
-            return (mem->read(cycles, state.PC + 1) + state.X) & 0x00FF;
+            return (bus->read(cycles, state.PC + 1) + state.X) & 0x00FF;
         case ADDR_ZEY:
-            return (mem->read(cycles, state.PC + 1) + state.Y) & 0x00FF;
+            return (bus->read(cycles, state.PC + 1) + state.Y) & 0x00FF;
         case ADDR_REL:
             return state.PC + 1;
         case ADDR_ABS:
-            return (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8));
+            return (bus->read(cycles, state.PC + 1) | (bus->read(cycles, state.PC + 2) << 8));
         case ADDR_ABX:
-            return (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8)) + state.X;
+            return (bus->read(cycles, state.PC + 1) | (bus->read(cycles, state.PC + 2) << 8)) + state.X;
         case ADDR_ABY:
-            return (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8)) + state.Y;
+            return (bus->read(cycles, state.PC + 1) | (bus->read(cycles, state.PC + 2) << 8)) + state.Y;
         case ADDR_IND:
-            temp = (mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8));
-            return (mem->read(cycles, temp) | (mem->read(cycles, temp + 1) << 8));
+            temp = (bus->read(cycles, state.PC + 1) | (bus->read(cycles, state.PC + 2) << 8));
+            return (bus->read(cycles, temp) | (bus->read(cycles, temp + 1) << 8));
         case ADDR_INX:
-            temp = ((mem->read(cycles, state.PC + 1) | (mem->read(cycles, state.PC + 2) << 8)) + state.X) & 0xFF;
-            return (mem->read(cycles, temp) | (mem->read(cycles, temp + 1) << 8));
+            temp = ((bus->read(cycles, state.PC + 1) | (bus->read(cycles, state.PC + 2) << 8)) + state.X) & 0xFF;
+            return (bus->read(cycles, temp) | (bus->read(cycles, temp + 1) << 8));
         case ADDR_INY:
-            temp = mem->read(cycles, state.PC + 1);
-            return (mem->read(cycles, temp) | (mem->read(cycles, temp + 1) << 8)) + state.Y;
+            temp = bus->read(cycles, state.PC + 1);
+            return (bus->read(cycles, temp) | (bus->read(cycles, temp + 1) << 8)) + state.Y;
         default:
             DEBUG("ERROR: unkown addressing mode.\n");;
             break;
@@ -132,7 +132,7 @@ void CPU::execute(int64_t max_cycles) {
         if(signals[RESET]) { reset(); continue; }
 
         // get opcode
-        uint8_t opcode = mem->read(cycles, state.PC);
+        uint8_t opcode = bus->read(cycles, state.PC);
 
         // execute instruction
         if(instructions.find(opcode) != instructions.end()) executeInstruction(cycles, instructions[opcode]);
@@ -154,12 +154,12 @@ void CPU::update_ZN_flags(uint8_t param) {
 }
 
 void CPU::push_stack(int64_t& cycles, uint8_t value) {
-    mem->write(cycles, STACK_LOCATION + state.SP--, value);
+    bus->write(cycles, STACK_LOCATION + state.SP--, value);
 }
 
 uint8_t CPU::pop_stack(int64_t& cycles) {
     state.SP++;
-    return mem->read(cycles, STACK_LOCATION + state.SP);
+    return bus->read(cycles, STACK_LOCATION + state.SP);
 }
 
 uint8_t CPU::convertFlagsToByte() {
@@ -194,7 +194,7 @@ void CPU::printFlags() {
 
 void CPU::printFullState() {
     int64_t tmp = 0; // use tmp cycles variable so the used cylces are incremented (not actually part of the prg) 
-    uint8_t opcode = mem->read(tmp, state.PC);
+    uint8_t opcode = bus->read(tmp, state.PC);
     DEBUG("Opcode: %s (%2X) ", instructions[opcode].name, opcode);
     printStatus();
     printFlags();
@@ -212,7 +212,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
 
     if(instr.mode != ADDR_IMP) {
         mem_loc = calc_addr(cycles, instr.mode, state);
-        param = mem->read(cycles, mem_loc);
+        param = bus->read(cycles, mem_loc);
     }
 
     cycles ++; // cycle for the execution of the instrcution
@@ -237,7 +237,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             }
             flags[C] = param & 0b10000000;
             param = param << 1u;
-            mem->write(cycles, mem_loc, param);
+            bus->write(cycles, mem_loc, param);
             update_ZN_flags(param);
             break;
         case BCC:
@@ -300,7 +300,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             update_ZN_flags(state.Y - param);
             break;
         case DEC:
-            mem->write(cycles, mem_loc, param - 1);
+            bus->write(cycles, mem_loc, param - 1);
             update_ZN_flags(param - 1);
             break;
         case DEX:
@@ -316,7 +316,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             update_ZN_flags(state.AC);
             break;
         case INC:
-            mem->write(cycles, mem_loc, param + 1);
+            bus->write(cycles, mem_loc, param + 1);
             update_ZN_flags(param + 1);
             break;
         case INX:
@@ -357,7 +357,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             }
             flags[C] = param & 0b00000001;
             param = param >> 1u;
-            mem->write(cycles, mem_loc, param);
+            bus->write(cycles, mem_loc, param);
             update_ZN_flags(param);
             break;
         case NOP:
@@ -390,7 +390,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
                 flags[C] = param & 0x80;
                 param = (param << 1u) | result;
                 update_ZN_flags(param);
-                mem->write(cycles, mem_loc, param);
+                bus->write(cycles, mem_loc, param);
             }
             break;
         case ROR:
@@ -404,7 +404,7 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
                 flags[C] = param & 0x01;
                 param = result | (param >> 1);
                 update_ZN_flags(param);
-                mem->write(cycles, mem_loc, param);
+                bus->write(cycles, mem_loc, param);
             }
             break;
         case RTI:
@@ -432,13 +432,13 @@ void CPU::executeInstruction(int64_t& cycles, const instruction& instr) {
             flags[I] = true;
             break;
         case STA:
-            mem->write(cycles, mem_loc, state.AC);
+            bus->write(cycles, mem_loc, state.AC);
             break;
         case STX:
-            mem->write(cycles, mem_loc, state.X);
+            bus->write(cycles, mem_loc, state.X);
             break;
         case STY:
-            mem->write(cycles, mem_loc, state.Y);
+            bus->write(cycles, mem_loc, state.Y);
             break;
         case TAX:
             state.X = state.AC;

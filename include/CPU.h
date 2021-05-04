@@ -6,9 +6,9 @@
 #include <cstring>
 #include <stdint-gcc.h>
 
-#include "Memory.h"
-#include "Instructions.h"
+#include "Bus.h"
 #include "Debug.h"
+#include "Instructions.h"
 
 #define STACK_LOCATION 0x0100 // second page resevered for stack
 
@@ -45,7 +45,7 @@ class CPU {
 public:
     CPU();
 
-    void attachMemeory(Memory* memory);
+    void attachBus(Bus* bus);
     void execute(int64_t max_cycles);
 
     // Signal interactions
@@ -64,7 +64,7 @@ public:
 private:
     bool flags[8];
     cpu_state state{};
-    Memory* mem = nullptr;
+    Bus* bus = nullptr;
     std::map<uint8_t, instruction> instructions;
     
     int64_t cycles = 0;

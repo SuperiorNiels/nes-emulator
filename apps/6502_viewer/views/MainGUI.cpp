@@ -1,10 +1,6 @@
 #include "MainGUI.h"
 
-MainGUI::MainGUI(CPU* cpu, Memory* mem) : cpu(cpu), mem(mem) {
-    //mem_edit.ReadOnly = true;
-    //mem_edit.OptShowDataPreview = true;
-    //mem_edit.OptShowOptions = false;
-}
+MainGUI::MainGUI(CPU* cpu, RAM_Bus* bus) : cpu(cpu), bus(bus) {}
 
 bool MainGUI::render() {
     int64_t tmp;
@@ -36,7 +32,7 @@ bool MainGUI::render() {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
             DEBUG("Seleceted file: %s\n", filePathName.c_str());
-            mem->loadROM(filePathName.c_str());
+            bus->openROM(filePathName.c_str());
             cpu->setCPUSignal(RESET, true);
             cpu->execute(1); // cpu reset (put in known state)
             cpu->setProgramCounter(0x400); // test program starts at 0400
@@ -62,12 +58,12 @@ bool MainGUI::render() {
             mem_edit.GotoAddr = cpu_state.PC;
             mem_edit.DataEditingTakeFocus = false;
         }
-        mem_edit.DrawContents((void*) mem->getMemoryPointer(), mem->getMemorySize() + 1);
+        mem_edit.DrawContents((void*) bus->RAM->getMemoryPointer(), bus->RAM->getMemorySize() + 1);
         ImGui::EndChild();
         
         ImGui::Separator();
 
-        ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, mem->read(tmp, cpu_state.PC));
+        ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, bus->read(tmp, cpu_state.PC));
         ImGui::SameLine();
         ImGui::Text("| PC: %4X | AC: %2X | X: %2X | Y: %2X | SP: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);        
         ImGui::Text("Flags: ");

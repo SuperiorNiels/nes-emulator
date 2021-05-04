@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Console.h"
+#include "Debug.h"
 #include "View.h"
 
 class Window {

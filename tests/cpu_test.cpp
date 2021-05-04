@@ -1,17 +1,16 @@
 #include <gtest/gtest.h>
 #include "CPU.h"
-#include "DirectMemory.h"
+#include "RAM_Bus.h"
 
 TEST(CPU_TESTS, FullFunctionalTestNoDecimal) {
     CPU cpu;
-    DirectMemory mem(0xFFFF);
+    RAM_Bus bus;
 
     const char* bin_location = "../data/roms/functional_test_no_decimal_ops.bin";
 
-    mem.reset();
-    mem.loadROM(bin_location);
+    bus.openROM(bin_location);
 
-    cpu.attachMemeory(&mem);
+    cpu.attachBus(&bus);
     cpu.setCPUSignal(RESET, true);
     cpu.execute(1); // cpu reset (put in known state)
     cpu.setProgramCounter(0x0400); // start of the loaded program

@@ -4,16 +4,22 @@
 
 #include <stdint-gcc.h>
 #include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <fstream>
+
+#include "Debug.h"
 
 
 class Memory {
 public:
-    Memory() {};
+    Memory() = delete;
+    Memory(const uint32_t size);
 
-    virtual void reset() = 0;
-    virtual uint8_t read(int64_t& cycles, uint16_t addr) = 0;
-    virtual void write(int64_t& cycles, uint16_t addr, uint8_t data) = 0;
-    virtual void loadROM(const char* filename) = 0;
+    void reset();
+    uint8_t read(int64_t& cycles, uint16_t addr);
+    void write(int64_t& cycles, uint16_t addr, uint8_t data);
+    void loadROM(const char* filename);
 
     uint8_t* getMemoryPointer() { return mem; };
     const uint32_t getMemorySize() const { return (const uint32_t) mem_size; };

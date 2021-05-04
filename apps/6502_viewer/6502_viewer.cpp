@@ -12,14 +12,14 @@ const int WINDOW_HEIGHT = 600;
 int main(int argc, char* args[])
 {
     auto cpu = CPU();
-    cpu.setResetVector(0x0400);
-    cpu.setCPUSignal(RESET, true);
     auto mem = DirectMemory(0xFFFF); // 16kb memory
     mem.reset();
-    auto gui = MainGUI(&cpu, &mem);
     cpu.attachMemeory(&mem);
+    cpu.setCPUSignal(RESET, true);
     cpu.execute(1); // execute to reset cpu (set known state)
+    cpu.setProgramCounter(0x0400); // test program starts at 0400
 
+    auto gui = MainGUI(&cpu, &mem);
     auto factory = WindowFactory_SDL();
     auto window = factory.createWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 

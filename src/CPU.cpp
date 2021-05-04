@@ -29,7 +29,7 @@ instruction CPU::getCurrentInstruction() {
 }
 
 void CPU::reset() {
-    state.PC = reset_vector;
+    state.PC = (mem->read(cycles, reset_vector) | (mem->read(cycles, reset_vector + 1) << 8));
     state.AC = 0x00;
     state.X = 0x00;
     state.Y = 0x00;
@@ -38,11 +38,15 @@ void CPU::reset() {
     flags[4] = true; // brk
     flags[5] = true; // unused (always 1)
     signals[RESET] = false;
-    cycles += 7; // fake cycle count
+    cycles += 5; // fake cycle count
 }
 
 void CPU::setResetVector(uint16_t vector) {
     reset_vector = vector;
+}
+
+void CPU::setProgramCounter(uint16_t PC) {
+    state.PC = PC;
 }
 
 void CPU::irq() {

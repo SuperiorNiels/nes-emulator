@@ -38,7 +38,8 @@ bool MainGUI::render() {
             DEBUG("Seleceted file: %s\n", filePathName.c_str());
             mem->loadROM(filePathName.c_str());
             cpu->setCPUSignal(RESET, true);
-            cpu->execute(1);
+            cpu->execute(1); // cpu reset (put in known state)
+            cpu->setProgramCounter(0x400); // test program starts at 0400
         }
         
         ImGuiFileDialog::Instance()->Close();
@@ -53,7 +54,6 @@ bool MainGUI::render() {
         auto cpu_flags = cpu->getCPUFlags();
         auto cpu_cycles = cpu->getCPUExecutedCycles();
         auto cpu_instruction = cpu->getCurrentInstruction();
-        auto current_reset_vector = cpu->getResetVector();
 
         // Memory viewer
         float footer_height = style.ItemSpacing.y + 30 + ImGui::GetTextLineHeightWithSpacing() * 5;
@@ -85,16 +85,12 @@ bool MainGUI::render() {
 
             ImGui::TableNextColumn();
                 char reset_vector_buf[4];
-                ImGui::Text("CPU reset vector: ");
+                ImGui::Text("Set CPU PC: ");
                 ImGui::TableNextColumn();
-                sprintf(reset_vector_buf, "%X", current_reset_vector); 
+                sprintf(reset_vector_buf, "%X", cpu_state.PC); 
                 if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    uint16_t reset_vector;
-                    if (sscanf(reset_vector_buf, "%4hX", &reset_vector) == 1) {
-                        cpu->setResetVector(reset_vector);
-                        //cpu->setCPUSignal(RESET, true);
-                        //cpu->execute(1);
-                    }
+                    uint16_t PC;
+                    if (sscanf(reset_vector_buf, "%4hX", &PC) == 1) cpu->setProgramCounter(PC);
                 }
 
             ImGui::EndTable();

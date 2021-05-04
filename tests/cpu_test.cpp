@@ -12,8 +12,9 @@ TEST(CPU_TESTS, FullFunctionalTestNoDecimal) {
     mem.loadROM(bin_location);
 
     cpu.attachMemeory(&mem);
-    cpu.setResetVector(0x0400); // start of the loaded program
     cpu.setCPUSignal(RESET, true);
+    cpu.execute(1); // cpu reset (put in known state)
+    cpu.setProgramCounter(0x0400); // start of the loaded program
     cpu.execute(100000000);
     
     auto final_state = cpu.getCPUState();

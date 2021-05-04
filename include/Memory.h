@@ -19,7 +19,7 @@ public:
     void reset();
     uint8_t read(int64_t& cycles, uint16_t addr);
     void write(int64_t& cycles, uint16_t addr, uint8_t data);
-    void loadROM(const char* filename);
+    void openROM(const char* filename);
 
     uint8_t* getMemoryPointer() { return mem; };
     const uint32_t getMemorySize() const { return (const uint32_t) mem_size; };

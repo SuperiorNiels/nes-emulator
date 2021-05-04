@@ -7,7 +7,7 @@ Memory::Memory(const uint32_t size) {
     this->mem_initialized = true;
 }
 
-void Memory::loadROM(const char* filename) {
+void Memory::openROM(const char* filename) {
     if(!mem_initialized) { DEBUG("Memory not initialized yet (load_bin).\n"); return; } 
     DEBUG("Loading binary program: %s\n", filename);
     std::ifstream file(filename, std::ios::binary | std::ios::ate);

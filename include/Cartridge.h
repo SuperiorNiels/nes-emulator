@@ -16,7 +16,7 @@ public:
     explicit Cartridge(const char* filename);
 
     void reset();
-    void openROM(const char* filename);
+    bool openROM(const char* filename);
 
     ~Cartridge();
 

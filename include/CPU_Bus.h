@@ -21,7 +21,7 @@ public:
     CPU_Bus(Cartridge* cartridge);
 
     void reset() override;
-    void openROM(const char* filename) override;
+    bool openROM(const char* filename) override;
     uint8_t read(int64_t& cycles, uint16_t addr) override;
     void write(int64_t& cycles, uint16_t addr, uint8_t data) override;
 

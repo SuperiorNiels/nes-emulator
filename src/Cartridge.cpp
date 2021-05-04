@@ -5,7 +5,7 @@ Cartridge::Cartridge(const char* filename) {
     openROM(filename);
 }
 
-void Cartridge::openROM(const char* filename) {
+bool Cartridge::openROM(const char* filename) {
     /* Load iNES roms and create correct mappers */
 
     reset(); // first reset memory
@@ -20,7 +20,7 @@ void Cartridge::openROM(const char* filename) {
     if(!file.read(buffer, size)) {
         DEBUG("Something went wrong while reading file.\n");
         file.close();
-        return;
+        return false;
     }
     file.close();
     DEBUG("File loaded.\n");
@@ -28,7 +28,7 @@ void Cartridge::openROM(const char* filename) {
     // Check iNES header
     if(!(buffer[0] == 0x4E && buffer[1] == 0x45 && buffer[2] == 0x53 && buffer[3] == 0x1A)) {
         DEBUG("Selected file is not in iNES format, failed to load.\n");
-        return;
+        return false;
     }
     DEBUG("Valid iNES file opened, configuring mapper.\n");
 
@@ -54,16 +54,19 @@ void Cartridge::openROM(const char* filename) {
             mapper = new Mapper000(nPRGBanks, nCHRBanks);
             break;
         default:
+            reset();
             DEBUG("NES ROM containes unsupported mapper (%d).\n", mapper_id);
-            return;
+            return false;
     }
 
     // Success
     DEBUG("ROM loaded successfully!\n");
+    return true;
 }
 
 void Cartridge::reset() {
     delete mapper, PRG, CHR;
+    nPRGBanks, nCHRBanks = 0, 0;
 }
 
 Cartridge::~Cartridge() {

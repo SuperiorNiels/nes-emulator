@@ -8,8 +8,8 @@ CPU_Bus::CPU_Bus(Cartridge* cartridge) {
     this->workRAM = new Memory(0x2000);
 }
 
-void CPU_Bus::openROM(const char* filename) {
-    cartridge->openROM(filename);
+bool CPU_Bus::openROM(const char* filename) {
+    return cartridge->openROM(filename);
 }
 
 uint8_t CPU_Bus::read(int64_t& cycles, uint16_t addr) {

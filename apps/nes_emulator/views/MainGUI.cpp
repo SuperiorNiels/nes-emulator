@@ -36,9 +36,10 @@ bool MainGUI::render() {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
             DEBUG("Seleceted file: %s\n", filePathName.c_str());
-            bus->openROM(filePathName.c_str());
-            cpu->setCPUSignal(RESET, true);
-            cpu->execute(1);
+            if(bus->openROM(filePathName.c_str())) {
+                cpu->setCPUSignal(RESET, true);
+                cpu->execute(1);
+            }
         }
         
         ImGuiFileDialog::Instance()->Close();

@@ -93,13 +93,13 @@ void NESMemory::write(int64_t& cycles, uint16_t addr, uint8_t data) {
     cycles++; // alyways use 1 cycle for writing
     int64_t tmp; // for accessing
     switch(addr) {
-        case 0 ... 0x1FFF: mem[addr & 0x07FF] = data;                                           // 2kB internal RAM
-        case 0x2000 ... 0x3FFF: return PPU_registers->write(tmp, addr & 0x2008, data);          // PPU registers (repeat every 8 bytes)
-        case 0x4000 ... 0x4017: break;                                                          // NES APU and I/O registers
-        case 0x4018 ... 0x401F: break;                                                          // Disabled
-        case 0x4020 ... 0x5FFF: DEBUG("[READ] accessing expansion ROM.\n"); break;              // Expansion rom
-        case 0x6000 ... 0x7FFF: return workRAM->write(tmp, addr, data);                         // Work RAM (normally in cartridge)
-        case 0x8000 ... 0xFFFF: return PRG->write(tmp, mapper->getMappedPRG(addr), data);       // PRG ROM (mapped)
+        case 0 ... 0x1FFF: mem[addr & 0x07FF] = data; return;                                           // 2kB internal RAM
+        case 0x2000 ... 0x3FFF: return PPU_registers->write(tmp, addr & 0x2008, data); return;          // PPU registers (repeat every 8 bytes)
+        case 0x4000 ... 0x4017: return;                                                                 // NES APU and I/O registers
+        case 0x4018 ... 0x401F: return;                                                                 // Disabled
+        case 0x4020 ... 0x5FFF: DEBUG("[READ] accessing expansion ROM.\n"); return;                     // Expansion rom
+        case 0x6000 ... 0x7FFF: return workRAM->write(tmp, addr, data); return;                         // Work RAM (normally in cartridge)
+        case 0x8000 ... 0xFFFF: return PRG->write(tmp, mapper->getMappedPRG(addr), data); return;       // PRG ROM (mapped)
         default: break;
     }
 

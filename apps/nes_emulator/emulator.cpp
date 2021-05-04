@@ -12,9 +12,9 @@ const int WINDOW_HEIGHT = 600;
 int main(int argc, char* args[])
 {
     auto cpu = CPU();
-    cpu.setResetVector(0x0400);
+    cpu.setResetVector(0x8000);
     cpu.setCPUSignal(RESET, true);
-    auto mem = NESMemory(); // 16kb memory
+    auto mem = NESMemory(); 
     mem.reset();
     auto gui = MainGUI(&cpu, &mem);
     cpu.attachMemeory(&mem);

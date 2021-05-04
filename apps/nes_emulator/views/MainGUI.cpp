@@ -53,7 +53,7 @@ bool MainGUI::render() {
         float full_heigth = ImGui::GetWindowHeight() - footer_size;
 
         if(mem->PRG != nullptr) {
-            ImGui::BeginChild("mem1", ImVec2(0, full_heigth / 3), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+            ImGui::BeginChild("mem1", ImVec2(0, full_heigth / 4), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
             ImGui::Text("NES CPU RAM (size: %d bytes)", mem->getMemorySize());
             ImGui::Separator();
             cpuRAM.DrawContents((void*) mem->getMemoryPointer(), mem->getMemorySize());
@@ -61,7 +61,7 @@ bool MainGUI::render() {
 
             ImGui::Separator();
 
-            ImGui::BeginChild("mem2", ImVec2(0, full_heigth / 3), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+            ImGui::BeginChild("mem2", ImVec2(0, full_heigth / 4), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
             ImGui::Text("CARTRIDGE PRG ROM (size: %d bytes, split in %d banks.)", mem->PRG->getMemorySize(), mem->PRG_size);
             ImGui::Separator();
             PRG.DrawContents((void*) mem->PRG->getMemoryPointer(), mem->PRG->getMemorySize());
@@ -69,11 +69,82 @@ bool MainGUI::render() {
             
             ImGui::Separator();
 
-            ImGui::BeginChild("mem3", ImVec2(0, full_heigth / 3), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+            ImGui::BeginChild("mem3", ImVec2(0, full_heigth / 4), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
             ImGui::Text("CARTRIDGE CHR ROM (size: %d bytes, split in %d banks.)", mem->CHR->getMemorySize(), mem->CHR_size);
             ImGui::Separator();
             CHR.DrawContents((void*) mem->CHR->getMemoryPointer(), mem->CHR->getMemorySize());
             ImGui::EndChild(); 
+
+            ImGui::BeginChild("cpu", ImVec2(0, full_heigth / 4), true, 0);
+                // 6502 CPU state
+                auto cpu_state = cpu->getCPUState();
+                auto cpu_flags = cpu->getCPUFlags();
+                auto cpu_cycles = cpu->getCPUExecutedCycles();
+                auto cpu_instruction = cpu->getCurrentInstruction();
+                auto current_reset_vector = cpu->getResetVector();
+
+                ImGui::Text("Curr. Instr.: %s (%2x)", cpu_instruction.name, mem->read(tmp, cpu_state.PC));
+                ImGui::SameLine();
+                ImGui::Text("| PC: %4X | AC: %2X | X: %2X | Y: %2X | SP: %4X", cpu_state.PC, cpu_state.AC, cpu_state.X, cpu_state.Y, cpu_state.SP);        
+                ImGui::Text("Flags: ");
+                for(uint8_t i = 0; i < 8; i++) {
+                    if(cpu_flags[i]) { ImGui::SameLine(); ImGui::Text("%c", flags_chr[i]); }
+                    else { ImGui::SameLine(); ImGui::Text("-"); }
+                }
+                ImGui::SameLine(); ImGui::Text("\t Cycles: %ld", cpu_cycles);
+
+                if (ImGui::BeginTable("checkers", 6)) {
+                    ImGui::TableNextColumn();
+                        if(ImGui::Button("NMI")) { cpu->setCPUSignal(NMI, true); cpu->execute(1); }
+                        ImGui::SameLine(); if(ImGui::Button("IRQ")) { cpu->setCPUSignal(IRQ, true); cpu->execute(1); }
+                        ImGui::SameLine(); if(ImGui::Button("RESET")) { cpu->setCPUSignal(RESET, true); cpu->execute(1); }
+
+                    ImGui::TableNextColumn();
+                        char reset_vector_buf[4];
+                        ImGui::Text("CPU reset vector: ");
+                        ImGui::TableNextColumn();
+                        sprintf(reset_vector_buf, "%X", current_reset_vector); 
+                        if (ImGui::InputText("##addr", reset_vector_buf, sizeof(reset_vector_buf) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                            uint16_t reset_vector;
+                            if (sscanf(reset_vector_buf, "%4hX", &reset_vector) == 1) {
+                                cpu->setResetVector(reset_vector);
+                                //cpu->setCPUSignal(RESET, true);
+                                //cpu->execute(1);
+                            }
+                        }
+
+                    ImGui::EndTable();
+                }
+
+                if (ImGui::BeginTable("checkers", 6)) {
+                    ImGui::TableNextColumn(); ImGui::Checkbox("CPU Execute", &executeRom);
+                    ImGui::TableNextColumn(); ImGui::Text("Speed (cycles):");
+                    ImGui::TableNextColumn(); ImGui::SliderInt("", &cpu_speed, 1, 100000);
+                    ImGui::EndTable();
+                }
+
+                if(ImGui::BeginTable("bottons", 6)) {
+                    ImGui::TableNextColumn(); 
+                        if(ImGui::Button("Run Step")) {
+                            cpu->execute(1);
+                        }
+
+                    ImGui::TableNextColumn(); 
+                        char run_cycles[16];
+                        ImGui::Text("Run Cycles: ");
+                        ImGui::TableNextColumn(); 
+                        memset(run_cycles, 0, sizeof(run_cycles));
+                        if (ImGui::InputText("##cycles", run_cycles, sizeof(run_cycles), ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                            int64_t _cycles = 0;
+                            if (sscanf(run_cycles, "%ld", &_cycles) == 1) {
+                                cpu->execute(_cycles);
+                            }
+                        }
+                    
+                    ImGui::EndTable();
+                }
+
+            ImGui::EndChild();
         } else {
             ImGui::BeginChild("text", ImVec2(0, full_heigth), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
             ImGui::Text("Load NES ROM (in iNES format) using the load ROM menu.");

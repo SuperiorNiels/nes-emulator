@@ -29,7 +29,7 @@ bool MainGUI::render() {
 
     // Load ROM file Dialog
     if(loadRom) {
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".nes,.rom,.bin", "../");
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".nes,.rom,.bin", "../../../data/");
         loadRom = false;
     }  
     if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {

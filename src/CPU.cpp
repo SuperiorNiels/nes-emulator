@@ -35,7 +35,7 @@ void CPU::reset() {
     state.X = 0x00;
     state.Y = 0x00;
     state.SP = 0xFF;
-    memset(&flags, 0b0, 8);
+    memset(&flags, 0, 8);
     flags[4] = true; // brk
     flags[5] = true; // unused (always 1)
     signals[RESET] = false;

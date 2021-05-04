@@ -57,7 +57,7 @@ void NESMemory::loadROM(const char* filename) {
             mapper = new Mapper000(PRG_size, CHR_size);
             break;
         default:
-            DEBUG("NES ROM containes unsupported mapper (%d).\n", mapper);
+            DEBUG("NES ROM containes unsupported mapper (%d).\n", mapper_id);
             return;
     }
 

@@ -37,7 +37,7 @@ void CPU_Bus::write(int64_t& cycles, uint16_t addr, uint8_t data) {
         case 0x4018 ... 0x401F: return;                                                                                             // Disabled
         case 0x4020 ... 0x5FFF: DEBUG("[WRITE] accessing expansion ROM.\n"); return;                                                // Expansion rom
         case 0x6000 ... 0x7FFF: return workRAM->write(cycles, addr - 0x6000, data); return;                                         // Work RAM (normally in cartridge)
-        case 0x8000 ... 0xFFFF: return cartridge->PRG->write(cycles, cartridge->mapper->getMappedPRG(addr - 0x8000), data); return; // PRG ROM (mapped)
+        case 0x8000 ... 0xFFFF: DEBUG("[WRITE] writing to cartridge!\n"); return; //cartridge->PRG->write(cycles, cartridge->mapper->getMappedPRG(addr - 0x8000), data); return; // PRG ROM (mapped)
         default: break;
     }
 

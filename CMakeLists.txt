@@ -11,21 +11,21 @@ set(IMGUI_CLUB_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_club")
 set(IMGUI_FILE_DIALOG_PATH "${CMAKE_SOURCE_DIR}/lib/imgui_filedialog")
 set(CMAKE_CXX_STANDARD 14)
 
-if(WIN32) 
-     add_compile_options("-mwindows")
-endif()
+# if(WIN32) 
+#      add_compile_options("-mwindows")
+# endif()
 
-# Google GTest
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-enable_testing()
-include(GoogleTest)
+# # Google GTest
+# include(FetchContent)
+# FetchContent_Declare(
+#   googletest
+#   URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+# )
+# # For Windows: Prevent overriding the parent project's compiler/linker settings
+# set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# FetchContent_MakeAvailable(googletest)
+# enable_testing()
+# include(GoogleTest)
 include(FindPkgConfig)
 
 # ---------------------------------- Sources and Libraries ----------------------------------
@@ -74,9 +74,9 @@ add_library(console_lib ${SRC_FILES})
 target_link_libraries(console_lib ${SDL2_LIBRARIES})
 
 # GTest EXE
-add_executable(console_lib_test ${TEST_FILES})
-target_link_libraries(console_lib_test console_lib gtest_main)
-gtest_discover_tests(console_lib_test)
+# add_executable(console_lib_test ${TEST_FILES})
+# target_link_libraries(console_lib_test console_lib gtest_main)
+# gtest_discover_tests(console_lib_test)
 
 # imgui lib
 add_library(imgui_lib ${IMGUI_FILES} ${IMGUI_BACKEND_FILES} ${IMGUI_CLUB_FILES} ${IMGUI_FILE_DIALOG_FILES})

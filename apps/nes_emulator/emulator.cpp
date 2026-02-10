@@ -5,11 +5,11 @@
 #include "SDL/Window_SDL.h"
 #include "views/MainGUI.h"
 
-const char* WINDOW_TITLE = "NES Emulator";
+const char *WINDOW_TITLE = "NES Emulator";
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
-int main(int argc, char* args[])
+int main(int argc, char *args[])
 {
     auto cpu = CPU();
     auto cartridge = Cartridge();
@@ -22,7 +22,8 @@ int main(int argc, char* args[])
 
     window->init();
     window->addView(&gui);
-    while(window->isOpen()) window->update();
+    while (window->isOpen())
+        window->update();
     window->close();
 
     return 0;

@@ -4,6 +4,11 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <array>
+#include <sstream>
+#include <fstream>
+#include <limits.h>
+#include <unistd.h>
 
 #include "CPU.h"
 #include "RAM_Bus.h"
@@ -1042,20 +1047,204 @@ std::vector<TestResult> testAllInstructions(CPU &cpu, RAM_Bus &bus)
     return results;
 }
 
+namespace
+{
+    std::string getExecutableDir()
+    {
+        char buffer[PATH_MAX];
+        ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+        if (len <= 0)
+        {
+            return "";
+        }
+        buffer[len] = '\0';
+        std::string path(buffer);
+        size_t pos = path.find_last_of('/');
+        if (pos == std::string::npos)
+        {
+            return "";
+        }
+        return path.substr(0, pos);
+    }
+
+    bool fileExists(const std::string &path)
+    {
+        std::ifstream file(path, std::ios::binary);
+        return file.good();
+    }
+
+    std::string resolveRomPath(const std::string &rom_name)
+    {
+        const std::string exe_dir = getExecutableDir();
+        const std::string rel_path = "data/roms/" + rom_name;
+        const std::string build_rel_path = "../" + rel_path;
+
+        std::vector<std::string> candidates = {
+            build_rel_path,
+            exe_dir.empty() ? "" : (exe_dir + "/" + build_rel_path),
+            exe_dir.empty() ? "" : (exe_dir + "/../../" + rel_path),
+            exe_dir.empty() ? "" : (exe_dir + "/../../../" + rel_path)};
+
+        for (const auto &candidate : candidates)
+        {
+            if (!candidate.empty() && fileExists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return "";
+    }
+
+    struct RomResult
+    {
+        bool passed = false;
+        std::string message;
+    };
+
+    RomResult runFunctionalNoDecimal(const std::string &rom_path)
+    {
+        CPU cpu;
+        RAM_Bus bus;
+        cpu.attachBus(&bus);
+
+        if (!bus.openROM(rom_path.c_str()))
+        {
+            return {false, "Failed to load ROM"};
+        }
+
+        cpu.setCPUSignal(RESET, true);
+        cpu.execute(1);
+        cpu.setProgramCounter(PROGRAM_START);
+        cpu.execute(100000000);
+
+        auto final_state = cpu.getCPUState();
+        if (final_state.PC == 0x336D)
+        {
+            return {true, "PC reached $336D (tests passed)"};
+        }
+
+        std::ostringstream msg;
+        msg << "PC ended at $" << std::hex << std::uppercase << final_state.PC;
+        return {false, msg.str()};
+    }
+
+    RomResult runSmokeRom(const std::string &rom_path)
+    {
+        CPU cpu;
+        RAM_Bus bus;
+        cpu.attachBus(&bus);
+
+        if (!bus.openROM(rom_path.c_str()))
+        {
+            return {false, "Failed to load ROM"};
+        }
+
+        cpu.setCPUSignal(RESET, true);
+        cpu.execute(1);
+        cpu.setProgramCounter(PROGRAM_START);
+        cpu.execute(50000);
+
+        const std::array<uint16_t, 8> addrs = {
+            0x0200, 0x0201, 0x0202, 0x0203, 0x0204, 0x0205, 0x0206, 0x0207};
+        const std::array<uint8_t, 8> expected = {
+            0x7F, 0x80, 0x60, 0xA0, 0x0F, 0x00, 0x01, 0xAA};
+
+        int64_t cycles = 0;
+        for (size_t i = 0; i < addrs.size(); ++i)
+        {
+            uint8_t value = bus.read(cycles, addrs[i]);
+            if (value != expected[i])
+            {
+                std::ostringstream msg;
+                msg << "Mismatch at $" << std::hex << std::uppercase << addrs[i]
+                    << ": got $" << std::setw(2) << std::setfill('0') << static_cast<int>(value)
+                    << ", expected $" << std::setw(2) << std::setfill('0') << static_cast<int>(expected[i]);
+                return {false, msg.str()};
+            }
+        }
+
+        return {true, "All smoke checks matched"};
+    }
+
+    void printRomUsage(const char *exe_name)
+    {
+        std::cout << "Usage:\n";
+        std::cout << "  " << exe_name << " --suite functional\n";
+        std::cout << "  " << exe_name << " --suite smoke\n";
+        std::cout << "  " << exe_name << " --suite all\n";
+        std::cout << "  " << exe_name << " --instruction-tests\n";
+    }
+}
+
 // Main function
 int main(int argc, char *args[])
 {
-    // Create CPU and bus
+    const std::string functional_rom = resolveRomPath("functional_test_no_decimal_ops.bin");
+    const std::string smoke_rom = resolveRomPath("cpu_smoke.bin");
+
+    if (argc > 1)
+    {
+        std::string arg1 = args[1];
+        if (arg1 == "--suite" && argc > 2)
+        {
+            std::string suite = args[2];
+            bool ok = true;
+
+            if (suite == "functional" || suite == "all")
+            {
+                if (functional_rom.empty())
+                {
+                    std::cout << "functional_test_no_decimal_ops: FAIL - ROM not found\n";
+                    ok = false;
+                }
+                else
+                {
+                    RomResult res = runFunctionalNoDecimal(functional_rom);
+                    std::cout << "functional_test_no_decimal_ops: " << (res.passed ? "PASS" : "FAIL")
+                              << " - " << res.message << "\n";
+                    ok = ok && res.passed;
+                }
+            }
+
+            if (suite == "smoke" || suite == "all")
+            {
+                if (smoke_rom.empty())
+                {
+                    std::cout << "cpu_smoke: FAIL - ROM not found\n";
+                    ok = false;
+                }
+                else
+                {
+                    RomResult res = runSmokeRom(smoke_rom);
+                    std::cout << "cpu_smoke: " << (res.passed ? "PASS" : "FAIL")
+                              << " - " << res.message << "\n";
+                    ok = ok && res.passed;
+                }
+            }
+
+            return ok ? 0 : 1;
+        }
+
+        if (arg1 == "--instruction-tests")
+        {
+            CPU cpu;
+            RAM_Bus bus;
+            cpu.attachBus(&bus);
+            std::vector<TestResult> results = testAllInstructions(cpu, bus);
+            printTestResults(results);
+            return 0;
+        }
+
+        printRomUsage(args[0]);
+        return 1;
+    }
+
+    // Default: run instruction tests for backward compatibility
     CPU cpu;
     RAM_Bus bus;
-
-    // Attach bus to CPU
     cpu.attachBus(&bus);
-
-    // Run tests
     std::vector<TestResult> results = testAllInstructions(cpu, bus);
-
-    // Print results
     printTestResults(results);
 
     return 0;
